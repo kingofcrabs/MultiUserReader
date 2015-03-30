@@ -1,24 +1,11 @@
 ﻿using HDLibrary.Wpf.Input;
-using ManagedWinapi.Windows;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Automation;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Xml;
 
 namespace ReadResult
@@ -38,6 +25,8 @@ namespace ReadResult
         public MainWindow()
         {
             InitializeComponent();
+            SetWorkingFolder selectFolderForm = new SetWorkingFolder();
+            selectFolderForm.ShowDialog();
             this.Loaded += MainWindow_Loaded;
 
         }
@@ -71,11 +60,13 @@ namespace ReadResult
         }
 
 
+       
+
         void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             HotKeyHost hotKeyHost = new HotKeyHost((HwndSource)HwndSource.FromVisual(App.Current.MainWindow));
-            hotKeyHost.AddHotKey(new CustomHotKey("CreateNew", Key.N, ModifierKeys.Control, true));
-            hotKeyHost.AddHotKey(new CustomHotKey("StartAcq", Key.F5, ModifierKeys.None, true));
+            hotKeyHost.AddHotKey(new CustomHotKey(this,"CreateNew", Key.N, ModifierKeys.Control, true));
+            hotKeyHost.AddHotKey(new CustomHotKey(this,"StartAcq", Key.F5, ModifierKeys.None, true));
 
     
          
@@ -108,8 +99,6 @@ namespace ReadResult
         {
             try
             {
-
-                
                 AutomationElement iControl = GetWindowByName("control");
                  // Sample usage
                 ShowWindow(iControl.Current.NativeWindowHandle, SW_SHOWMAXIMIZED);
@@ -125,6 +114,17 @@ namespace ReadResult
                 Debug.WriteLine(ex.Message);
             }
         }
+
+        internal void OnStartAcquisition()
+        {
+            MessageBox.Show("OnStartAcquisition");
+        }
+
+        public void OnNewPlate()
+        {
+            QueryLabel queryForm = new QueryLabel();
+            queryForm.ShowDialog();
+        }
     }
 
 
@@ -132,9 +132,12 @@ namespace ReadResult
     [Serializable]
     public class CustomHotKey : HotKey
     {
-        public CustomHotKey(string name, Key key, ModifierKeys modifiers, bool enabled)
+
+        MainWindow hostWindow = null;
+        public CustomHotKey(MainWindow window, string name, Key key, ModifierKeys modifiers, bool enabled)
             : base(key, modifiers, enabled)
         {
+            hostWindow = window;
             Name = name;
         }
 
@@ -155,6 +158,15 @@ namespace ReadResult
         protected override void OnHotKeyPress()
         {
             //MessageBox.Show(string.Format("'{0}' has been pressed ({1})", Name, this));
+            if(Key == System.Windows.Input.Key.N && Modifiers == ModifierKeys.Control)
+            {
+                //Ctrl + N
+                hostWindow.OnNewPlate();
+            }
+            else if( Key == System.Windows.Input.Key.F5)
+            {
+                hostWindow.OnStartAcquisition();
+            }
             base.OnHotKeyPress();
         }
 
