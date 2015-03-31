@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,8 +11,7 @@ namespace ReadResult
     public class GlobalVars
     {
         private static GlobalVars vars = null;
-        public PlatesInfo PlateInfo { get; set; }
-        public RenderSelection RenderSelection { get; set; }
+        public PlatesInfo PlatesInfo { get; set; }
         public static GlobalVars Instance
         {
             get
@@ -22,24 +23,13 @@ namespace ReadResult
         }   
         public GlobalVars()
         {
-            PlateInfo = new PlatesInfo(new List<string>(){"Rex","Shark"});
-        }
+            PlatesInfo = new PlatesInfo();
+         }
 
         public string WorkingFolder { get; set; }
     }
 
-    public class RenderSelection
-    {
-        public bool backGround;
-        public bool sampleVal;
-        public bool calculated;
-        public RenderSelection(bool b, bool s, bool c)
-        {
-            backGround = b;
-            sampleVal = s;
-            calculated = c;
-        }
-    }
+   
 
 
     public class PlatesInfo
@@ -48,13 +38,20 @@ namespace ReadResult
         
         public string CurrentPlateName { get; set; }
 
-        public PlatesInfo( List<string> userNames)
+        public PlatesInfo()
         {
-            foreach (string userName in userNames)
-            {
-                plateVals.Add(userName, new PlateData());
-            }
-            CurrentPlateName = userNames.First();
+            //AddDummyData();
+        }
+
+      
+        public void AddPlate(string sName)
+        {
+#if DEBUG
+            if (plateVals.ContainsKey(sName))
+                return;
+#endif
+            plateVals.Add(sName, new PlateData());
+            CurrentPlateName = sName;
         }
 
         public PlateData CurrentPlateData
@@ -64,6 +61,7 @@ namespace ReadResult
                 return plateVals[CurrentPlateName];
             }
         }
+
     }
 
     public class WellVals
@@ -84,9 +82,76 @@ namespace ReadResult
         SampleVal = 2
     }
 
-    public class PlateData
+
+    public abstract class BindableBase : INotifyPropertyChanged
     {
-        public AcquiredStage Stage { get; set; }
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] String propertyName = null)
+        {
+            if (object.Equals(storage, value))
+
+                return false; storage = value; this.OnPropertyChanged(propertyName); return true;
+        }
+
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            var eventHandler = this.PropertyChanged;
+
+            if (eventHandler != null)
+
+            { eventHandler(this, new PropertyChangedEventArgs(propertyName)); }
+        }
+    }
+
+
+    public class PlateData : BindableBase
+    {
+
+        private AcquiredStage stage;
+
+        public AcquiredStage Stage
+        { 
+            get
+            {
+                return stage;
+            }
+            set
+            {
+                SetProperty(ref stage, value);
+            }
+        }
+
+        public void SetValues(List<double> result)
+        {
+            if(stage == AcquiredStage.Nothing)
+            {
+                SetBackGroudData(result);
+            }
+            else
+            {
+                SetSampleValues(result);
+            }
+        }
+
+        private void SetBackGroudData(List<double> bkVals)
+        {
+            for(int i = 0; i< bkVals.Count; i++)
+            {
+                vals[i].backGround = bkVals[i];
+            }
+            stage = AcquiredStage.BackGround;
+        }
+
+        private void SetSampleValues(List<double> smpVals)
+        {
+            for (int i = 0; i < smpVals.Count; i++)
+            {
+                vals[i].sampleVal = smpVals[i];
+            }
+            stage = AcquiredStage.SampleVal;
+        }
+
         List<WellVals> vals = new List<WellVals>();
         public WellVals this[int wellID]
         {
@@ -97,6 +162,22 @@ namespace ReadResult
             set
             {
                 vals[wellID - 1] = value;
+            }
+        }
+
+        public bool BackGround
+        {
+            get
+            {
+                return Stage > AcquiredStage.Nothing;
+            }
+        }
+
+        public bool SampleVal
+        {
+            get
+            {
+                return Stage == AcquiredStage.SampleVal;
             }
         }
 
@@ -113,6 +194,8 @@ namespace ReadResult
         {
             return Math.Max(vals.Max(x=>x.backGround), vals.Max(x => x.sampleVal));
         }
+
+       
     }
 
 

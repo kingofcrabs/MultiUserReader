@@ -34,7 +34,7 @@ namespace ReadResult
             CalcuUsable(out usableWidth, out usableHeight);
             if (usableHeight == 0 || usableWidth == 0)
                 return;
-            string curPlateName = GlobalVars.Instance.PlateInfo.CurrentPlateName;
+            string curPlateName = GlobalVars.Instance.PlatesInfo.CurrentPlateName;
             if (curPlateName == null || curPlateName == "")
                 return;
 
@@ -46,7 +46,7 @@ namespace ReadResult
             double yUnit = usableHeight / rows;
             double xUnit = usableWidth  / cols;
 
-            PlateData plateData = GlobalVars.Instance.PlateInfo.CurrentPlateData;
+            PlateData plateData = GlobalVars.Instance.PlatesInfo.CurrentPlateData;
             double maxVol = plateData.Max();
             for (int y = 0; y < rows; y++)
             {
@@ -81,38 +81,22 @@ namespace ReadResult
             Pen thinPen = new Pen(new SolidColorBrush(thinPenColor), 1);
             SolidColorBrush renderBrush = new SolidColorBrush(Colors.Transparent);
             drawingContext.DrawRectangle(renderBrush, thinPen, new Rect(ptStart, cellSize));
-
-
             
             //vol
             double vol2Show = 0;
-            RenderSelection renderSelection = GlobalVars.Instance.RenderSelection;
-         
-
-            if (plateDate.Stage == AcquiredStage.SampleVal)
+      
+            if (plateDate.Stage == AcquiredStage.BackGround)
             {
-                if (renderSelection.sampleVal)
-                {
-                    SolidColorBrush volBrush = new SolidColorBrush(Colors.LightGreen);
-                    double val = plateDate[id].sampleVal;
-                    vol2Show = val;
-                    DrawVol(val, maxVol, cellSize, ptStart, volBrush, thinPen, drawingContext);
-                }
-                if(renderSelection.calculated)
-                {
-                    SolidColorBrush volBrush = new SolidColorBrush(Colors.LightBlue);
-                    double val = plateDate[id].sampleVal - plateDate[id].backGround;
-                    vol2Show = val;
-                    DrawVol(val, maxVol, cellSize, ptStart, volBrush, thinPen, drawingContext);
-                }
-            }
-
-            if (plateDate.Stage >= AcquiredStage.BackGround && renderSelection.backGround)
-            {
-                SolidColorBrush volBrush = new SolidColorBrush(Color.FromArgb(100,255,0,0));
+                SolidColorBrush volBrush = new SolidColorBrush(Color.FromArgb(100, 255, 0, 0));
                 double val = plateDate[id].backGround;
-                if (!renderSelection.calculated && !renderSelection.sampleVal)
-                    vol2Show = val;
+                vol2Show = val;
+                DrawVol(val, maxVol, cellSize, ptStart, volBrush, thinPen, drawingContext);
+            }
+            else
+            {
+                SolidColorBrush volBrush = new SolidColorBrush(Colors.LightBlue);
+                double val = plateDate[id].sampleVal - plateDate[id].backGround;
+                vol2Show = val;
                 DrawVol(val, maxVol, cellSize, ptStart, volBrush, thinPen, drawingContext);
             }
 

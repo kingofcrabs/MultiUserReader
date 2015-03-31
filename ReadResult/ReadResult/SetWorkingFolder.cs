@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ReadResult.Properties;
 
 namespace ReadResult
 {
@@ -17,11 +18,19 @@ namespace ReadResult
         {
             Application.EnableVisualStyles();
             InitializeComponent();
+            txtWorkingFolder.Text = Settings.Default.WorkingFolderPath;
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog fd = new System.Windows.Forms.FolderBrowserDialog();
+
+            if(txtWorkingFolder.Text != "")
+            {
+                //fd.RootFolder = txtWorkingFolder.Text;
+                fd.SelectedPath = txtWorkingFolder.Text;
+            }
+
             fd.ShowNewFolderButton = false;
             fd.Description = "选择工作目录";
             var result = fd.ShowDialog(this);
@@ -45,7 +54,9 @@ namespace ReadResult
                 SetInfo("目录不存在，请重新选择！");
                 return;
             }
-            GlobalVars.Instance.WorkingFolder = sPath;
+            Settings.Default.WorkingFolderPath = sPath;
+            Settings.Default.Save();
+            GlobalVars.Instance.WorkingFolder = sPath + "\\";
             this.Close();
         }
 

@@ -21,15 +21,17 @@ namespace ReadResult
     public partial class PlateRender : UserControl
     {
         MicroPlate microPlate;
-        public PlateRender()
+        public PlateRender(Window parent)
         {
             InitializeComponent();
             this.Loaded += PlateRender_Loaded;
-            this.SizeChanged += PlateRender_SizeChanged;
+            parent.SizeChanged += parent_SizeChanged;
         }
 
-        void PlateRender_SizeChanged(object sender, SizeChangedEventArgs e)
+        void parent_SizeChanged(object sender, SizeChangedEventArgs e)
         {
+            if (microPlate == null)
+                return;
             microPlate.BoundingSize = new Size(myCanvas.ActualWidth, myCanvas.ActualHeight);
         }
 

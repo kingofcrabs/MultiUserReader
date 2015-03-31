@@ -34,9 +34,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ManagedWinapi">
-      <HintPath>3rd\ManagedWinapi.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -60,6 +57,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="FileWatcher.cs" />
     <Compile Include="GlobalVars.cs" />
     <Compile Include="hotKey.cs" />
     <Compile Include="Plate96.cs" />
@@ -70,13 +68,16 @@
       <DependentUpon>QueryLabel.xaml</DependentUpon>
     </Compile>
     <Compile Include="SerializeHelper.cs" />
+    <Compile Include="Settings.cs" />
     <Compile Include="SetWorkingFolder.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="SetWorkingFolder.Designer.cs">
       <DependentUpon>SetWorkingFolder.cs</DependentUpon>
     </Compile>
+    <Compile Include="TraceListener.cs" />
     <Compile Include="UIbase.cs" />
+    <Compile Include="utility.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
