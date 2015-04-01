@@ -40,17 +40,20 @@ namespace ReadResult
         {
             string s = txtPath.Text;
             string wholePath = GlobalVars.Instance.WorkingFolder + "\\" + s + ".xls";
-            if (lstPlateNames.SelectedItem != null)
+          
+            if(lstPlateNames.SelectedItem == null)
             {
-                wholePath = lstPlateNames.SelectedItem.ToString();
-            }
-            if(!File.Exists(wholePath))
-            {
-                SetInfo(string.Format("文件：{0}不存在！请重新输入。",wholePath));
+                SetInfo(string.Format("请选择需要读数的板子！",wholePath));
                 return;
             }
+            wholePath = lstPlateNames.SelectedItem.ToString();
             FileInfo fileInfo = new FileInfo(wholePath);
             PlateName = fileInfo.Name;
+            if (GlobalVars.Instance.PlatesInfo.PlateNames.Contains(PlateName))
+            {
+                SetInfo(string.Format("板子:{0}已经存在，请重新选择！", PlateName));
+                return;
+            }
             this.DialogResult = true;
             this.Close();
         }

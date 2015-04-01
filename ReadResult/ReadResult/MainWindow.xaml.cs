@@ -1,4 +1,4 @@
-﻿using HDLibrary.Wpf.Input;
+﻿using NHotkey.Wpf;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -20,7 +20,7 @@ namespace ReadResult
     /// </summary>
     public partial class MainWindow : Window
     {
-        ObservableCollection<string> userNames = new ObservableCollection<string>();
+        ObservableCollection<string> plateNames = new ObservableCollection<string>();
         private const int SW_SHOWMAXIMIZED = 3;
         TraceListener _textBoxListener;
         PlateRender plateRender;
@@ -35,7 +35,8 @@ namespace ReadResult
             InitializeComponent();
             SetWorkingFolder selectFolderForm = new SetWorkingFolder();
             selectFolderForm.ShowDialog();
-            lstboxPlates.ItemsSource = userNames;
+            lstboxPlates.ItemsSource = plateNames;
+            
             this.Loaded += MainWindow_Loaded;
             this.Closing += MainWindow_Closing;
         }
@@ -77,12 +78,63 @@ namespace ReadResult
         void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             AddTracer();
-            
-            HotKeyHost hotKeyHost = new HotKeyHost((HwndSource)HwndSource.FromVisual(App.Current.MainWindow));
-            hotKeyHost.AddHotKey(new CustomHotKey(this,"CreateNew", Key.N, ModifierKeys.Control, true));
-            hotKeyHost.AddHotKey(new CustomHotKey(this,"StartAcq", Key.G,ModifierKeys.None, true));
+            lstboxPlates.SelectedIndex = 0;
+            HotkeyManager.Current.AddOrReplace("CreateNew", Key.N, ModifierKeys.Control , OnNewPlate);
+            HotkeyManager.Current.AddOrReplace("StartAcq", Key.G, ModifierKeys.None, OnStartAcq);
+            HotkeyManager.Current.AddOrReplace("F1", Key.F1, ModifierKeys.None, OnHelp);
+
+          
             plateRender = new PlateRender(this);
             myCanvas.Children.Add(plateRender);
+        }
+
+        private void OnHelp(object sender, NHotkey.HotkeyEventArgs e)
+        {
+            Help helpForm = new Help();
+            helpForm.ShowDialog();
+        }
+
+        private void OnStartAcq(object sender, NHotkey.HotkeyEventArgs e)
+        {
+            if (lstboxPlates.SelectedItem == null)
+            {
+                Trace.WriteLine("Please select a plate first!");
+                return;
+            }
+
+            AutomationElement iControl = GetWindowByName("control");
+            if (iControl == null)
+            {
+                Trace.WriteLine("Cannot find icontrol!");
+                return;
+            }
+
+            // Sample usage
+            ShowWindow(iControl.Current.NativeWindowHandle, SW_SHOWMAXIMIZED);
+            Thread.Sleep(200);
+            AutomationElement startBtn = iControl.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "Start"));
+
+            Trace.WriteLine("Acquisition started.");
+            Utility.BackupFiles();
+            fileWatcher = new FileWatcher(GlobalVars.Instance.WorkingFolder);
+            fileWatcher.onCreated += fileWatcher_onCreated;
+            fileWatcher.Start();
+
+            var click = startBtn.GetCurrentPattern(InvokePattern.Pattern) as InvokePattern;
+            click.Invoke();
+        }
+
+        private void OnNewPlate(object sender, NHotkey.HotkeyEventArgs e)
+        {
+            QueryLabel queryForm = new QueryLabel();
+            var res = queryForm.ShowDialog();
+            if (!(bool)res)
+                return;
+            string s = queryForm.PlateName;
+            Trace.WriteLine(string.Format("new plate: {0}", s));
+            plateNames.Add(s);
+            GlobalVars.Instance.PlatesInfo.AddPlate(s);
+            lstboxPlates.SelectedIndex = plateNames.Count - 1;
         }
 
 
@@ -113,63 +165,27 @@ namespace ReadResult
             Trace.WriteLine(string.Format("Read {0} well values.", vals.Count));
             return vals;
         }
-
-        internal void OnStartAcquisition()
-        {
-            if(lstboxPlates.SelectedItem == null)
-            {
-                Trace.WriteLine("Please select a plate first!");
-                return;
-            }
-
-            AutomationElement iControl = GetWindowByName("control");
-            if(iControl ==null)
-            {
-                Trace.WriteLine("Cannot find icontrol!");
-                return;
-            }
-
-            // Sample usage
-            ShowWindow(iControl.Current.NativeWindowHandle, SW_SHOWMAXIMIZED);
-            Thread.Sleep(200);
-            AutomationElement startBtn = iControl.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "Start"));
-
-            Trace.WriteLine("Acquisition started.");
-            Utility.BackupFiles();
-            fileWatcher = new FileWatcher(GlobalVars.Instance.WorkingFolder);
-            fileWatcher.onCreated += fileWatcher_onCreated;
-            fileWatcher.Start();
-
-            var click = startBtn.GetCurrentPattern(InvokePattern.Pattern) as InvokePattern;
-            click.Invoke();
-           
-        }
-
     
 
         void fileWatcher_onCreated(string sNewFile)
         {
             Trace.WriteLine(string.Format("found result file: {0}", sNewFile));
-            var result = ReadFromFile(sNewFile);
-            GlobalVars.Instance.PlatesInfo.CurrentPlateData.SetValues(result);
-            UpdateCurrentPlateInfo(GlobalVars.Instance.PlatesInfo.CurrentPlateName);
-            
+            try
+            {
+                var result = ReadFromFile(sNewFile);
+                GlobalVars.Instance.PlatesInfo.CurrentPlateData.SetValues(result);
+                UpdateCurrentPlateInfo(GlobalVars.Instance.PlatesInfo.CurrentPlateName);
+                ExcelInterop.Write();
+                Trace.WriteLine(string.Format("Result has been written to plate: {0}", GlobalVars.Instance.PlatesInfo.CurrentPlateName));
+            }
+            catch(Exception ex)
+            {
+                Trace.Write("Error happend: " + ex.Message);
+            }
             //plateRender.Refresh();
         }
 
-        public void OnNewPlate()
-        {
-            QueryLabel queryForm = new QueryLabel();
-            var res = queryForm.ShowDialog();
-            if (!(bool)res)
-                return;
-            string s = queryForm.PlateName;
-            Trace.WriteLine(string.Format("new plate: {0}", s));
-            userNames.Add(s);
-            GlobalVars.Instance.PlatesInfo.AddPlate(s);
-            lstboxPlates.SelectedIndex = userNames.Count - 1;
-        }
-
+   
         private void lstboxPlates_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
             if (lstboxPlates == null)
@@ -177,8 +193,11 @@ namespace ReadResult
 
              if (lstboxPlates.SelectedIndex == -1)
                 return;
+
              lstboxPlates.Focus();
              string curPlateName = lstboxPlates.SelectedItem.ToString();
+             if (!GlobalVars.Instance.PlatesInfo.PlateNames.Contains(curPlateName))
+                 return;
              Trace.WriteLine(string.Format("select plate: {0}", curPlateName));
              UpdateCurrentPlateInfo(curPlateName, false);
         }
@@ -205,60 +224,7 @@ namespace ReadResult
 
 
 
-    [Serializable]
-    public class CustomHotKey : HotKey
-    {
-
-        MainWindow hostWindow = null;
-        public CustomHotKey(MainWindow window, string name, Key key, ModifierKeys modifiers, bool enabled)
-            : base(key, modifiers, enabled)
-        {
-            hostWindow = window;
-            Name = name;
-        }
-
-        private string name;
-        public string Name
-        {
-            get { return name; }
-            set
-            {
-                if (value != name)
-                {
-                    name = value;
-                    OnPropertyChanged(name);
-                }
-            }
-        }
-
-        protected override void OnHotKeyPress()
-        {
-            //MessageBox.Show(string.Format("'{0}' has been pressed ({1})", Name, this));
-            if(Key == System.Windows.Input.Key.N && Modifiers == ModifierKeys.Control)
-            {
-                //Ctrl + N
-                hostWindow.OnNewPlate();
-            }
-            else if (Key == System.Windows.Input.Key.G)
-            {
-                hostWindow.OnStartAcquisition();
-            }
-            base.OnHotKeyPress();
-        }
-
-
-        protected CustomHotKey(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-            : base(info, context)
-        {
-            Name = info.GetString("Name");
-        }
-
-        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-        {
-            base.GetObjectData(info, context);
-            info.AddValue("Name", Name);
-        }
-    }
+    
 
     public static class ExtensionMethods
     {

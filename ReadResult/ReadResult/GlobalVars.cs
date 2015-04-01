@@ -62,6 +62,14 @@ namespace ReadResult
             }
         }
 
+
+        public List<string> PlateNames 
+        { 
+            get 
+            {
+                return plateVals.Keys.ToList();
+            }
+        }
     }
 
     public class WellVals
@@ -150,6 +158,14 @@ namespace ReadResult
                 vals[i].sampleVal = smpVals[i];
             }
             stage = AcquiredStage.SampleVal;
+        }
+
+        public List<WellVals> Values
+        {
+            get
+            {
+                return vals;
+            }
         }
 
         List<WellVals> vals = new List<WellVals>();

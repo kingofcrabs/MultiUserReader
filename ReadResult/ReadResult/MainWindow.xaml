@@ -2,6 +2,11 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="IControl助手" Height="500" Width="700">
+    <Window.InputBindings>
+        <KeyBinding Command="ApplicationCommands.Open"
+       Gesture="CTRL+R" />
+    </Window.InputBindings>
+
     <Grid>
         <Grid.Resources>
             <Style TargetType="ListBoxItem">
