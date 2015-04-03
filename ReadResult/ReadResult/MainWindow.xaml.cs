@@ -1,4 +1,4 @@
-﻿using NHotkey.Wpf;
+﻿using ManagedWinapi.Windows;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -60,41 +60,44 @@ namespace ReadResult
 
      
 
-        public static AutomationElement GetWindowByName(string name)
-        {
-            AutomationElement root = AutomationElement.RootElement;
-            var collection = root.FindAll(TreeScope.Children, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Window));
-            foreach (AutomationElement window in collection)
-            {
-                //Debug.WriteLine(window.Current.Name + window.Current.ClassName);
-                if (window.Current.Name.Contains(name))
-                {
-                    return window;
-                }
-            }
-            return null;
-        }
+       
 
         void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             AddTracer();
             lstboxPlates.SelectedIndex = 0;
-            HotkeyManager.Current.AddOrReplace("CreateNew", Key.N, ModifierKeys.Control , OnNewPlate);
-            HotkeyManager.Current.AddOrReplace("StartAcq", Key.G, ModifierKeys.None, OnStartAcq);
-            HotkeyManager.Current.AddOrReplace("F1", Key.F1, ModifierKeys.None, OnHelp);
-
-          
+            this.KeyDown += MainWindow_KeyDown;
             plateRender = new PlateRender(this);
             myCanvas.Children.Add(plateRender);
         }
 
-        private void OnHelp(object sender, NHotkey.HotkeyEventArgs e)
+        void MainWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+             
+            switch(e.Key)
+            {
+                case Key.G:
+                    OnStartAcq();
+                    break;
+                case Key.N:
+                    if( Keyboard.Modifiers == ModifierKeys.Control)
+                        OnNewPlate();
+                    break;
+                case Key.F1:
+                    OnHelp();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void OnHelp()
         {
             Help helpForm = new Help();
             helpForm.ShowDialog();
         }
 
-        private void OnStartAcq(object sender, NHotkey.HotkeyEventArgs e)
+        private void OnStartAcq()
         {
             if (lstboxPlates.SelectedItem == null)
             {
@@ -102,18 +105,42 @@ namespace ReadResult
                 return;
             }
 
-            AutomationElement iControl = GetWindowByName("control");
-            if (iControl == null)
+            List<string> windowInfos = new List<string>();
+
+            SystemWindow[] windows = SystemWindow.AllToplevelWindows;
+            SystemWindow icontrolWindow = null;
+            for (int i = 0; i < windows.Length; i++)
             {
-                Trace.WriteLine("Cannot find icontrol!");
+                string sTitle = windows[i].Title;
+                if(sTitle != "")
+                    windowInfos.Add(sTitle);
+                sTitle = sTitle.ToLower();
+                if (sTitle.Contains("tecan") && sTitle.Contains("control"))
+                {
+                    icontrolWindow = windows[i];
+                    break;
+                }
+            }
+            
+            if (icontrolWindow == null)
+            {
+                string sInfoFile = @"c:\windowsInfo.txt";
+                File.WriteAllLines(sInfoFile, windowInfos);
+                Trace.WriteLine(string.Format("Cannot find icontrol! Windows information has been written to:{0}",sInfoFile));
                 return;
             }
+            AutomationElement iControl = AutomationElement.FromHandle(icontrolWindow.HWnd);
 
             // Sample usage
             ShowWindow(iControl.Current.NativeWindowHandle, SW_SHOWMAXIMIZED);
             Thread.Sleep(200);
             AutomationElement startBtn = iControl.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "Start"));
-
+            bool bEnable = (bool)startBtn.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty);
+            if(!bEnable)
+            {
+                Trace.WriteLine("Cannot start acquisition, icontrol is not ready!");
+                return;
+            }
             Trace.WriteLine("Acquisition started.");
             Utility.BackupFiles();
             fileWatcher = new FileWatcher(GlobalVars.Instance.WorkingFolder);
@@ -124,7 +151,7 @@ namespace ReadResult
             click.Invoke();
         }
 
-        private void OnNewPlate(object sender, NHotkey.HotkeyEventArgs e)
+        private void OnNewPlate()
         {
             QueryLabel queryForm = new QueryLabel();
             var res = queryForm.ShowDialog();
@@ -205,19 +232,16 @@ namespace ReadResult
         private void UpdateCurrentPlateInfo(string curPlateName,bool switchWindowState = true)
         {
             GlobalVars.Instance.PlatesInfo.CurrentPlateName = curPlateName;
-            this.Dispatcher.Invoke( ()=>
-                  {
+            this.Dispatcher.Invoke( new Action(()=>{
+                  
                       chkboxBackGround.IsChecked = GlobalVars.Instance.PlatesInfo.CurrentPlateData.BackGround;
                       chkboxSampleVal.IsChecked = GlobalVars.Instance.PlatesInfo.CurrentPlateData.SampleVal;
                       //if (switchWindowState)
-                      {
-                          this.Height = this.Height + 1;
-                          this.Refresh();
-                          this.Height = this.Height - 1;
-                          //this.WindowState = System.Windows.WindowState.Maximized;
-                          //this.WindowState = System.Windows.WindowState.Normal;
+                      this.Height = this.Height + 1;
+                      this.Refresh();
+                      this.Height = this.Height - 1;
                       }
-                  });
+                  ));
           
         }
     }
