@@ -1,0 +1,10 @@
+﻿<Window x:Class="ReadResult.Help"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Help" Height="117" Width="309">
+    <Grid>
+        <Label Content="© 2014-2015 盈开生物，保留所有权利。" Height="32" HorizontalAlignment="Left" Margin="10,45,0,0" x:Name="label1" VerticalAlignment="Top" Width="266" />
+        <Label Content="" Height="29" HorizontalAlignment="Left" Margin="10,10,0,0" x:Name="lblDescription" VerticalAlignment="Top" Width="266" />
+
+    </Grid>
+</Window>
