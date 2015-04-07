@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SetWorkingFolder));
             this.btnConfirm = new System.Windows.Forms.Button();
             this.btnBrowse = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
@@ -94,13 +95,15 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(496, 174);
-            this.ControlBox = false;
             this.Controls.Add(this.label2);
             this.Controls.Add(this.txtHint);
             this.Controls.Add(this.txtWorkingFolder);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.btnBrowse);
             this.Controls.Add(this.btnConfirm);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "SetWorkingFolder";
             this.Text = "设置工作目录";
             this.ResumeLayout(false);

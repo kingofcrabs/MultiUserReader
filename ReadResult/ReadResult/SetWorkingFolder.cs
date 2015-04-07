@@ -57,6 +57,7 @@ namespace ReadResult
             Settings.Default.WorkingFolderPath = sPath;
             Settings.Default.Save();
             GlobalVars.Instance.WorkingFolder = sPath + "\\";
+            this.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.Close();
         }
 

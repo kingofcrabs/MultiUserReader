@@ -34,6 +34,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>assist.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="ManagedWinapi">
       <HintPath>C:\Users\i311797\Documents\Visual Studio 2013\Projects\ReaderAssit\ReaderAssit\lib\ManagedWinapi.dll</HintPath>
@@ -144,6 +147,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="assist.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="assist.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

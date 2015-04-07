@@ -96,6 +96,7 @@ namespace ReadResult
             {
                 SolidColorBrush volBrush = new SolidColorBrush(Colors.LightBlue);
                 double val = plateDate[id].sampleVal - plateDate[id].backGround;
+                val = Math.Max(val, 0);
                 vol2Show = val;
                 DrawVol(val, maxVol, cellSize, ptStart, volBrush, thinPen, drawingContext);
             }

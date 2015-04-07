@@ -34,9 +34,13 @@ namespace ReadResult
         {
             InitializeComponent();
             SetWorkingFolder selectFolderForm = new SetWorkingFolder();
-            selectFolderForm.ShowDialog();
+            var result = selectFolderForm.ShowDialog();
+            if(result != System.Windows.Forms.DialogResult.OK)
+            {
+                this.Close();
+                return;
+            }
             lstboxPlates.ItemsSource = plateNames;
-            
             this.Loaded += MainWindow_Loaded;
             this.Closing += MainWindow_Closing;
         }
@@ -129,13 +133,17 @@ namespace ReadResult
                 Trace.WriteLine(string.Format("Cannot find icontrol! Windows information has been written to:{0}",sInfoFile));
                 return;
             }
-            AutomationElement iControl = AutomationElement.FromHandle(icontrolWindow.HWnd);
 
-            // Sample usage
-            ShowWindow(iControl.Current.NativeWindowHandle, SW_SHOWMAXIMIZED);
-            Thread.Sleep(200);
-            AutomationElement startBtn = iControl.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "Start"));
-            bool bEnable = (bool)startBtn.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty);
+            if (GlobalVars.Instance.StartButton == null)
+            {
+                AutomationElement iControl = AutomationElement.FromHandle(icontrolWindow.HWnd);
+                // Sample usage
+                ShowWindow(iControl.Current.NativeWindowHandle, SW_SHOWMAXIMIZED);
+                Thread.Sleep(200);
+                AutomationElement startBtn = iControl.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "Start"));
+                GlobalVars.Instance.StartButton = startBtn;
+            }
+            bool bEnable = (bool)GlobalVars.Instance.StartButton.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty);
             if(!bEnable)
             {
                 Trace.WriteLine("Cannot start acquisition, icontrol is not ready!");
@@ -147,7 +155,7 @@ namespace ReadResult
             fileWatcher.onCreated += fileWatcher_onCreated;
             fileWatcher.Start();
 
-            var click = startBtn.GetCurrentPattern(InvokePattern.Pattern) as InvokePattern;
+            var click = GlobalVars.Instance.StartButton.GetCurrentPattern(InvokePattern.Pattern) as InvokePattern;
             click.Invoke();
         }
 

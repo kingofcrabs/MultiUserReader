@@ -61,7 +61,7 @@ namespace ReadResult.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 0.03.
+        ///   Looks up a localized string similar to 0.04.
         /// </summary>
         internal static string version {
             get {

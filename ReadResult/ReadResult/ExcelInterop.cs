@@ -37,7 +37,8 @@ namespace ReadResult
                 }
             }
             ExcelCellText.set_Value(Missing.Value, myArray);
-
+            if(curStage == AcquiredStage.SampleVal)
+                xlsWs.PrintOutEx();
             workBook.Save();
             workBook.Close();
             excel.Quit();
