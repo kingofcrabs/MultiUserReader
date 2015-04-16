@@ -29,6 +29,8 @@ namespace ReadResult
         public string WorkingFolder { get; set; }
 
         public System.Windows.Automation.AutomationElement StartButton { get; set; }
+
+        public ManagedWinapi.Windows.SystemWindow IControlWindow { get; set; }
     }
 
    

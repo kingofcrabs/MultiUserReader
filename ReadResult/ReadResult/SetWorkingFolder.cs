@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ReadResult.Properties;
+using CP.Windows.Forms;
+using System.Configuration;
 
 namespace ReadResult
 {
@@ -23,22 +25,26 @@ namespace ReadResult
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            FolderBrowserDialog fd = new System.Windows.Forms.FolderBrowserDialog();
+            //FolderBrowserDialog fd = new System.Windows.Forms.FolderBrowserDialog();
 
-            if(txtWorkingFolder.Text != "")
+            //if(txtWorkingFolder.Text != "")
+            //{
+            //    //fd.RootFolder = txtWorkingFolder.Text;
+            //    fd.SelectedPath = txtWorkingFolder.Text;
+            //}
+
+            //fd.ShowNewFolderButton = false;
+            //fd.Description = "选择工作目录";
+            //var result = fd.ShowDialog(this);
+            //if (result != System.Windows.Forms.DialogResult.OK)
+            //    return;
+            ShellFolderBrowser folderBrowser1 = new ShellFolderBrowser();
+            folderBrowser1.BrowseFlags = BrowseFlags.ReturnOnlyFSDirs | BrowseFlags.ShowStatusText | BrowseFlags.Validate;
+            if (folderBrowser1.ShowDialog(NullWindow.Window))
             {
-                //fd.RootFolder = txtWorkingFolder.Text;
-                fd.SelectedPath = txtWorkingFolder.Text;
+                txtWorkingFolder.Text = folderBrowser1.FolderPath;
+                btnConfirm.Focus();
             }
-
-            fd.ShowNewFolderButton = false;
-            fd.Description = "选择工作目录";
-            var result = fd.ShowDialog(this);
-            if (result != System.Windows.Forms.DialogResult.OK)
-                return;
-
-            txtWorkingFolder.Text = fd.SelectedPath;
-            btnConfirm.Focus();
         }
 
         private void btnConfirm_Click(object sender, EventArgs e)
@@ -54,11 +60,26 @@ namespace ReadResult
                 SetInfo("目录不存在，请重新选择！");
                 return;
             }
+            try
+            {
+                CopyRemoteFolder(sPath);
+            }
+            catch(Exception ex)
+            {
+                SetInfo(string.Format("拷贝远程目录失败！原因是{0}", ex.Message));
+                return;
+            }
             Settings.Default.WorkingFolderPath = sPath;
             Settings.Default.Save();
-            GlobalVars.Instance.WorkingFolder = sPath + "\\";
+            GlobalVars.Instance.WorkingFolder = ConfigurationManager.AppSettings["tempFolder"];
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.Close();
+        }
+
+        private void CopyRemoteFolder(string remoteFolder)
+        {
+            SharedFolder sharedFolder = new SharedFolder();
+            sharedFolder.CopyFolderFromRemote(remoteFolder);
         }
 
         private void SetInfo(string s)

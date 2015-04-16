@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ManagedWinapi.Windows;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -6,21 +7,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
+using System.Windows.Automation;
 
 namespace ReadResult
 {
     class FileWatcher
     {
-        Timer timerNewFile = null;
         
-        DateTime timeStart;
         string sFolder;
         public delegate void Created(string file);
         public event Created onCreated;
-        
-        Int64 lastTimeSize = 0;
-        Timer timerFileSize = null;
-        string theNewOne;
+        private Timer timerFileSize = new Timer(1000);
 
         public FileWatcher(string folder)
         {
@@ -29,51 +26,36 @@ namespace ReadResult
 
         public void Start()
         {
-            timerNewFile = new Timer(1000);
-            timeStart = DateTime.Now;
-            timerNewFile.Elapsed += timerNewFile_Elapsed;
-            timerNewFile.Start();
+            timerFileSize.Elapsed += timerFileSize_Elapsed;
+            timerFileSize.Start();
             
         }
 
-        void timerNewFile_Elapsed(object sender, ElapsedEventArgs e)
+      
+        private bool AcquisitionWindowVisible()
         {
-            IEnumerable<string> files = Directory.EnumerateFiles(sFolder, "*.xml");
-            if (files.Count() > 0)
-            {
-                theNewOne = files.First();
-                timerNewFile.Stop();
-                lastTimeSize = (new FileInfo(theNewOne)).Length;
-                timerFileSize = new Timer(1000);
-                timerFileSize.Elapsed += timerFileSize_Elapsed;
-                timerFileSize.Start();
-            }
+            
+
+            AutomationElement acquisitionWindow = AutomationElement.RootElement.FindFirst(TreeScope.Children,
+                new PropertyCondition(AutomationElement.NameProperty, "Measurement in progress"));
+
+            return acquisitionWindow != null;
         }
 
         private void timerFileSize_Elapsed(object sender, ElapsedEventArgs e)
         {
-            long currentSize = new FileInfo(theNewOne).Length;
-            if(currentSize == lastTimeSize)
-            {
-                timerFileSize.Stop();
-                timerNewFile.Elapsed -= timerFileSize_Elapsed;
-                if (onCreated != null)
-                {
-                    onCreated(theNewOne);
-                }
-            }
-            else
-            {
-                lastTimeSize = currentSize;
-            }
-        }
+            bool isAcquiring = AcquisitionWindowVisible();
+            if (isAcquiring)
+                return;
 
-        private bool IsNewFile(string s)
-        {
-            FileInfo fileInfo = new FileInfo(s);
-            double totalSeconds = fileInfo.CreationTime.Subtract(timeStart).TotalSeconds;
-            return totalSeconds > 0;
-            
+            timerFileSize.Stop();
+            if (onCreated != null)
+            {
+                IEnumerable<string> files = Directory.EnumerateFiles(sFolder, "*.xml");
+                if(files.Count() >0)
+                    onCreated(files.First());
+            }
+         
         }
     }
 }

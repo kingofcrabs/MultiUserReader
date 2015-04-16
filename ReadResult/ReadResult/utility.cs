@@ -21,6 +21,8 @@ namespace ReadResult
             {
                 FileInfo fileInfo = new FileInfo(sFile);
                 string dstFullPath = dstFolder + fileInfo.Name;
+                if (File.Exists(dstFullPath))
+                    File.Delete(dstFullPath);
                 File.Move(sFile, dstFullPath);
             }
         }

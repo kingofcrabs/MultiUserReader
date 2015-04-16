@@ -47,6 +47,7 @@
       <HintPath>C:\Windows\assembly\GAC_MSIL\Microsoft.Office.Interop.Excel\15.0.0.0__71e9bce111e9429c\Microsoft.Office.Interop.Excel.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
@@ -90,6 +91,7 @@
     <Compile Include="SetWorkingFolder.Designer.cs">
       <DependentUpon>SetWorkingFolder.cs</DependentUpon>
     </Compile>
+    <Compile Include="ShareFolder.cs" />
     <Compile Include="TraceListener.cs" />
     <Compile Include="UIbase.cs" />
     <Compile Include="Utility.cs" />
@@ -153,6 +155,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="assist.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FileBrowse\FolderBrowser.csproj">
+      <Project>{f1c654d6-87a9-4a3b-9af3-377cd35c7b17}</Project>
+      <Name>FolderBrowser</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

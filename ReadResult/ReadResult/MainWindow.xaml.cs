@@ -109,33 +109,34 @@ namespace ReadResult
                 return;
             }
 
-            List<string> windowInfos = new List<string>();
-
-            SystemWindow[] windows = SystemWindow.AllToplevelWindows;
-            SystemWindow icontrolWindow = null;
-            for (int i = 0; i < windows.Length; i++)
-            {
-                string sTitle = windows[i].Title;
-                if(sTitle != "")
-                    windowInfos.Add(sTitle);
-                sTitle = sTitle.ToLower();
-                if (sTitle.Contains("tecan") && sTitle.Contains("control"))
-                {
-                    icontrolWindow = windows[i];
-                    break;
-                }
-            }
-            
-            if (icontrolWindow == null)
-            {
-                string sInfoFile = @"c:\windowsInfo.txt";
-                File.WriteAllLines(sInfoFile, windowInfos);
-                Trace.WriteLine(string.Format("Cannot find icontrol! Windows information has been written to:{0}",sInfoFile));
-                return;
-            }
 
             if (GlobalVars.Instance.StartButton == null)
             {
+                List<string> windowInfos = new List<string>();
+                SystemWindow[] windows = SystemWindow.AllToplevelWindows;
+                SystemWindow icontrolWindow = null;
+                for (int i = 0; i < windows.Length; i++)
+                {
+                    string sTitle = windows[i].Title;
+                    if (sTitle != "")
+                        windowInfos.Add(sTitle);
+                    sTitle = sTitle.ToLower();
+                    if (sTitle.Contains("tecan") && sTitle.Contains("control"))
+                    {
+                        icontrolWindow = windows[i];
+                        GlobalVars.Instance.IControlWindow = icontrolWindow;
+                        break;
+                    }
+                }
+
+                if (icontrolWindow == null)
+                {
+                    string sInfoFile = @"c:\windowsInfo.txt";
+                    File.WriteAllLines(sInfoFile, windowInfos);
+                    Trace.WriteLine(string.Format("Cannot find icontrol! Windows information has been written to:{0}", sInfoFile));
+                    return;
+                }
+
                 AutomationElement iControl = AutomationElement.FromHandle(icontrolWindow.HWnd);
                 // Sample usage
                 ShowWindow(iControl.Current.NativeWindowHandle, SW_SHOWMAXIMIZED);
@@ -153,10 +154,9 @@ namespace ReadResult
             Utility.BackupFiles();
             fileWatcher = new FileWatcher(GlobalVars.Instance.WorkingFolder);
             fileWatcher.onCreated += fileWatcher_onCreated;
-            fileWatcher.Start();
-
             var click = GlobalVars.Instance.StartButton.GetCurrentPattern(InvokePattern.Pattern) as InvokePattern;
             click.Invoke();
+            fileWatcher.Start();
         }
 
         private void OnNewPlate()

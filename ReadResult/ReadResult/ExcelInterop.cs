@@ -1,6 +1,7 @@
 ﻿using Microsoft.Office.Interop.Excel;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -37,9 +38,18 @@ namespace ReadResult
                 }
             }
             ExcelCellText.set_Value(Missing.Value, myArray);
-            if(curStage == AcquiredStage.SampleVal)
-                xlsWs.PrintOutEx();
+
             workBook.Save();
+            try
+            {
+                if (curStage == AcquiredStage.SampleVal)
+                    xlsWs.PrintOutEx();
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine("未能打印！");
+            }
+            
             workBook.Close();
             excel.Quit();
         }
