@@ -30,7 +30,7 @@ namespace ReadResult
         void QueryLabel_Loaded(object sender, RoutedEventArgs e)
         {
             txtPath.Focus();
-            var files = Directory.EnumerateFiles(GlobalVars.Instance.WorkingFolder, "*.xls");
+            var files = Directory.EnumerateFiles(GlobalVars.Instance.TempFolder, "*.xls");
             lstPlateNames.ItemsSource = files;
         }
 
@@ -39,7 +39,7 @@ namespace ReadResult
         private void btnConfirm_Click(object sender, RoutedEventArgs e)
         {
             string s = txtPath.Text;
-            string wholePath = GlobalVars.Instance.WorkingFolder + "\\" + s + ".xls";
+            string wholePath = GlobalVars.Instance.TempFolder + "\\" + s + ".xls";
           
             if(lstPlateNames.SelectedItem == null)
             {
@@ -71,7 +71,7 @@ namespace ReadResult
 
         private void UpdateValidLabels(string plateName)
         {
-            var files = Directory.EnumerateFiles(GlobalVars.Instance.WorkingFolder, "*.xls");
+            var files = Directory.EnumerateFiles(GlobalVars.Instance.TempFolder, "*.xls");
             List<string> names = files.Where(x => IsValid(x,plateName)).ToList();
             lstPlateNames.ItemsSource = names;
             if (names.Count > 0)

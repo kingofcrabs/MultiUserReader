@@ -33,9 +33,9 @@ namespace ReadResult
         public MainWindow()
         {
             InitializeComponent();
-            SetWorkingFolder selectFolderForm = new SetWorkingFolder();
-            var result = selectFolderForm.ShowDialog();
-            if(result != System.Windows.Forms.DialogResult.OK)
+            CheckRemoteFolder selectFolderForm = new CheckRemoteFolder();
+            selectFolderForm.ShowDialog();
+            if (!selectFolderForm.IsValidFolder)
             {
                 this.Close();
                 return;
@@ -152,7 +152,7 @@ namespace ReadResult
             }
             Trace.WriteLine("Acquisition started.");
             Utility.BackupFiles();
-            fileWatcher = new FileWatcher(GlobalVars.Instance.WorkingFolder);
+            fileWatcher = new FileWatcher(GlobalVars.Instance.TempFolder);
             fileWatcher.onCreated += fileWatcher_onCreated;
             var click = GlobalVars.Instance.StartButton.GetCurrentPattern(InvokePattern.Pattern) as InvokePattern;
             click.Invoke();
@@ -211,6 +211,8 @@ namespace ReadResult
                 GlobalVars.Instance.PlatesInfo.CurrentPlateData.SetValues(result);
                 UpdateCurrentPlateInfo(GlobalVars.Instance.PlatesInfo.CurrentPlateName);
                 ExcelInterop.Write();
+                Save2Remote();
+                
                 Trace.WriteLine(string.Format("Result has been written to plate: {0}", GlobalVars.Instance.PlatesInfo.CurrentPlateName));
             }
             catch(Exception ex)
@@ -218,6 +220,19 @@ namespace ReadResult
                 Trace.Write("Error happend: " + ex.Message);
             }
             //plateRender.Refresh();
+        }
+
+        private void Save2Remote()
+        {
+            var curPlateName = GlobalVars.Instance.PlatesInfo.CurrentPlateName;
+            var curStage = GlobalVars.Instance.PlatesInfo.CurrentPlateData.Stage;
+            if (curStage == AcquiredStage.SampleVal)
+            {
+                string workingFolder = GlobalVars.Instance.TempFolder;
+                string sFileName = workingFolder + curPlateName;
+                SharedFolder sharedFolder = new SharedFolder();
+                sharedFolder.SaveACopyfileToServer(sFileName);
+            }
         }
 
    

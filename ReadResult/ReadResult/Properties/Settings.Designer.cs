@@ -22,17 +22,5 @@ namespace ReadResult.Properties {
                 return defaultInstance;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string WorkingFolderPath {
-            get {
-                return ((string)(this["WorkingFolderPath"]));
-            }
-            set {
-                this["WorkingFolderPath"] = value;
-            }
-        }
     }
 }

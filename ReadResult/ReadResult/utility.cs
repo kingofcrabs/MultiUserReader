@@ -11,7 +11,7 @@ namespace ReadResult
     {
         public static void BackupFiles()
         {
-            string folder = GlobalVars.Instance.WorkingFolder;
+            string folder = GlobalVars.Instance.TempFolder;
             string dstFolder = folder + "backup\\";
             if (!Directory.Exists(dstFolder))
                 Directory.CreateDirectory(dstFolder);

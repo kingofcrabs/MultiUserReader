@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ReadResult.Properties;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
@@ -19,7 +20,7 @@ namespace ReadResult
         }
         public void CopyFolderFromRemote(string remoteFolder)
         {
-            string tempFolder = ConfigurationManager.AppSettings["tempFolder"];
+            string tempFolder = GlobalVars.Instance.TempFolder;
             if (!Directory.Exists(tempFolder))
                 Directory.CreateDirectory(tempFolder);
 
@@ -30,25 +31,21 @@ namespace ReadResult
             ExecuteCommand(command, 60000);
         }
 
-        public void SaveACopyfileToServer(string filePath, string savePath)
+        public void SaveACopyfileToServer(string srcFilePath)
         {
+            string savePath = GlobalVars.Instance.RemoteFolder; 
             var directory = Path.GetDirectoryName(savePath).Trim();
-            var filenameToSave = Path.GetFileName(savePath);
+            var filenameToSave = Path.GetFileName(srcFilePath);
 
             if (!directory.EndsWith("\\"))
                 filenameToSave = "\\" + filenameToSave;
 
-            var command = "NET USE " + directory + " /delete";
+            string  command = "NET USE " + directory + " /user:" + userName + " " + password;
             ExecuteCommand(command, 5000);
 
-            command = "NET USE " + directory + " /user:" + userName + " " + password;
+            command = " copy \"" + srcFilePath + "\"  \"" + directory + filenameToSave + "\"";
             ExecuteCommand(command, 5000);
 
-            command = " copy \"" + filePath + "\"  \"" + directory + filenameToSave + "\"";
-            ExecuteCommand(command, 5000);
-
-            command = "NET USE " + directory + " /delete";
-            ExecuteCommand(command, 5000);
         }
 
         public int ExecuteCommand(string command, int timeout)

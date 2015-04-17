@@ -51,7 +51,7 @@
         </GroupBox>
         
             <Label FontFamily="SimHei" Content="日志：" Grid.Column="2" HorizontalAlignment="Left" Margin="0,-2,0,0" VerticalAlignment="Top"/>
-            <TextBox Name="txtLog" Grid.Column="2" Margin="5,0,5,5" Grid.Row="1" TextWrapping="Wrap" Text="" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.RowSpan="3"/>
+            <TextBox IsReadOnly="True" Name="txtLog" Grid.Column="2" Margin="5,0,5,5" Grid.Row="1" TextWrapping="Wrap" Text="" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.RowSpan="3"/>
         
     </Grid>
 </Window>

@@ -9,7 +9,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ReadResult.Properties;
-using CP.Windows.Forms;
 using System.Configuration;
 
 namespace ReadResult
@@ -20,7 +19,6 @@ namespace ReadResult
         {
             Application.EnableVisualStyles();
             InitializeComponent();
-            txtWorkingFolder.Text = Settings.Default.WorkingFolderPath;
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
@@ -38,13 +36,6 @@ namespace ReadResult
             //var result = fd.ShowDialog(this);
             //if (result != System.Windows.Forms.DialogResult.OK)
             //    return;
-            ShellFolderBrowser folderBrowser1 = new ShellFolderBrowser();
-            folderBrowser1.BrowseFlags = BrowseFlags.ReturnOnlyFSDirs | BrowseFlags.ShowStatusText | BrowseFlags.Validate;
-            if (folderBrowser1.ShowDialog(NullWindow.Window))
-            {
-                txtWorkingFolder.Text = folderBrowser1.FolderPath;
-                btnConfirm.Focus();
-            }
         }
 
         private void btnConfirm_Click(object sender, EventArgs e)
@@ -69,9 +60,8 @@ namespace ReadResult
                 SetInfo(string.Format("拷贝远程目录失败！原因是{0}", ex.Message));
                 return;
             }
-            Settings.Default.WorkingFolderPath = sPath;
-            Settings.Default.Save();
-            GlobalVars.Instance.WorkingFolder = ConfigurationManager.AppSettings["tempFolder"];
+            
+            //GlobalVars.Instance.TempFolder = ConfigurationManager.AppSettings["tempFolder"];
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.Close();
         }

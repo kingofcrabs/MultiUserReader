@@ -15,7 +15,7 @@ namespace ReadResult
         {
             PlateData plateData = GlobalVars.Instance.PlatesInfo.CurrentPlateData;
             string curPlateName = GlobalVars.Instance.PlatesInfo.CurrentPlateName;
-            string workingFolder = GlobalVars.Instance.WorkingFolder;
+            string workingFolder = GlobalVars.Instance.TempFolder;
             string sFileName = workingFolder + curPlateName;
             AcquiredStage curStage = plateData.Stage;
             Application excel = new Application();
@@ -43,7 +43,10 @@ namespace ReadResult
             try
             {
                 if (curStage == AcquiredStage.SampleVal)
+                {
+                    SharedFolder sharedFolder = new SharedFolder();
                     xlsWs.PrintOutEx();
+                }
             }
             catch(Exception ex)
             {

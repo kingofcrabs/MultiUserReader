@@ -70,6 +70,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="CheckRemoteFolder.xaml.cs">
+      <DependentUpon>CheckRemoteFolder.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ExcelInterop.cs" />
     <Compile Include="FileWatcher.cs" />
     <Compile Include="GlobalVars.cs" />
@@ -95,6 +98,10 @@
     <Compile Include="TraceListener.cs" />
     <Compile Include="UIbase.cs" />
     <Compile Include="Utility.cs" />
+    <Page Include="CheckRemoteFolder.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Help.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -148,19 +155,15 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="assist.ico" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="assist.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\FileBrowse\FolderBrowser.csproj">
-      <Project>{f1c654d6-87a9-4a3b-9af3-377cd35c7b17}</Project>
-      <Name>FolderBrowser</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

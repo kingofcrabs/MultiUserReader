@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -26,7 +27,21 @@ namespace ReadResult
             PlatesInfo = new PlatesInfo();
          }
 
-        public string WorkingFolder { get; set; }
+        public string TempFolder
+        {
+            get
+            {
+                return ConfigurationManager.AppSettings["tempFolder"];
+            }
+        }
+
+        public string RemoteFolder
+        {
+            get
+            {
+                return ConfigurationManager.AppSettings["remoteFolder"];
+            }
+        }
 
         public System.Windows.Automation.AutomationElement StartButton { get; set; }
 
