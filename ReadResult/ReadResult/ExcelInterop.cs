@@ -14,16 +14,14 @@ namespace ReadResult
         public static void Write()
         {
             PlateData plateData = GlobalVars.Instance.PlatesInfo.CurrentPlateData;
-            string curPlateName = GlobalVars.Instance.PlatesInfo.CurrentPlateName;
-            string workingFolder = GlobalVars.Instance.TempFolder;
-            string sFileName = workingFolder + curPlateName;
+            string sFileName = GlobalVars.Instance.PlatesInfo.CurrentPlateData.FilePath;
             AcquiredStage curStage = plateData.Stage;
             Application excel = new Application();
             Workbook workBook = excel.Workbooks.Open(sFileName);
             Worksheet xlsWs = null;
             Range ExcelCellText;
             xlsWs = (Worksheet)workBook.Worksheets.get_Item(2);
-            string sCell = curStage == AcquiredStage.BackGround ? "C2" : "C12";
+            string sCell = curStage == AcquiredStage.BackGround ? "C12" : "C2";
             ExcelCellText = xlsWs.get_Range(sCell, Missing.Value);
             ExcelCellText = ExcelCellText.get_Resize(8, 12);
             double[,] myArray = new double[8, 12];
@@ -38,14 +36,12 @@ namespace ReadResult
                 }
             }
             ExcelCellText.set_Value(Missing.Value, myArray);
-
             workBook.Save();
             try
             {
                 if (curStage == AcquiredStage.SampleVal)
                 {
-                    SharedFolder sharedFolder = new SharedFolder();
-                    xlsWs.PrintOutEx();
+                    Process.Start("explorer.exe", sFileName);
                 }
             }
             catch(Exception ex)

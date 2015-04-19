@@ -51,26 +51,16 @@ namespace ReadResult
                 SetInfo("目录不存在，请重新选择！");
                 return;
             }
-            try
-            {
-                CopyRemoteFolder(sPath);
-            }
-            catch(Exception ex)
-            {
-                SetInfo(string.Format("拷贝远程目录失败！原因是{0}", ex.Message));
-                return;
-            }
-            
             //GlobalVars.Instance.TempFolder = ConfigurationManager.AppSettings["tempFolder"];
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.Close();
         }
 
-        private void CopyRemoteFolder(string remoteFolder)
-        {
-            SharedFolder sharedFolder = new SharedFolder();
-            sharedFolder.CopyFolderFromRemote(remoteFolder);
-        }
+        //private void CopyRemoteFolder(string remoteFolder)
+        //{
+        //    SharedFolder sharedFolder = new SharedFolder();
+        //    sharedFolder.CopyFolderFromRemote(remoteFolder);
+        //}
 
         private void SetInfo(string s)
         {

@@ -25,7 +25,8 @@ namespace ReadResult
         TraceListener _textBoxListener;
         PlateRender plateRender;
         FileWatcher fileWatcher = null;
-
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+     
         [DllImport("user32.dll")]
         static extern bool ShowWindow(int hWnd, int nCmdShow);
 
@@ -68,6 +69,7 @@ namespace ReadResult
 
         void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            log.Info("main form loaded");
             AddTracer();
             lstboxPlates.SelectedIndex = 0;
             this.KeyDown += MainWindow_KeyDown;
@@ -103,6 +105,7 @@ namespace ReadResult
 
         private void OnStartAcq()
         {
+            log.Info("start acquisition");
             if (lstboxPlates.SelectedItem == null)
             {
                 Trace.WriteLine("Please select a plate first!");
@@ -151,23 +154,35 @@ namespace ReadResult
                 return;
             }
             Trace.WriteLine("Acquisition started.");
-            Utility.BackupFiles();
-            fileWatcher = new FileWatcher(GlobalVars.Instance.TempFolder);
+            try
+            {
+                Utility.BackupFiles();
+            }
+            catch(Exception ex)
+            {
+                Trace.WriteLine("backup failed:" + ex.Message);
+            }
+            Trace.WriteLine("backup files");
+            fileWatcher = new FileWatcher(GlobalVars.Instance.WorkingFolder);
             fileWatcher.onCreated += fileWatcher_onCreated;
+           
             var click = GlobalVars.Instance.StartButton.GetCurrentPattern(InvokePattern.Pattern) as InvokePattern;
             click.Invoke();
+            Thread.Sleep(10000);
             fileWatcher.Start();
         }
 
         private void OnNewPlate()
         {
+            log.Info("new plate");
             QueryLabel queryForm = new QueryLabel();
             var res = queryForm.ShowDialog();
             if (!(bool)res)
                 return;
-            string s = queryForm.PlateName;
+            string s = queryForm.PlateFilePath;
             Trace.WriteLine(string.Format("new plate: {0}", s));
-            plateNames.Add(s);
+            FileInfo fileInfo = new FileInfo(s);
+            plateNames.Add(fileInfo.Name);
             GlobalVars.Instance.PlatesInfo.AddPlate(s);
             lstboxPlates.SelectedIndex = plateNames.Count - 1;
         }
@@ -211,8 +226,8 @@ namespace ReadResult
                 GlobalVars.Instance.PlatesInfo.CurrentPlateData.SetValues(result);
                 UpdateCurrentPlateInfo(GlobalVars.Instance.PlatesInfo.CurrentPlateName);
                 ExcelInterop.Write();
-                Save2Remote();
-                
+                fileWatcher.onCreated -= fileWatcher_onCreated;
+                //Save2Remote();
                 Trace.WriteLine(string.Format("Result has been written to plate: {0}", GlobalVars.Instance.PlatesInfo.CurrentPlateName));
             }
             catch(Exception ex)
@@ -222,18 +237,18 @@ namespace ReadResult
             //plateRender.Refresh();
         }
 
-        private void Save2Remote()
-        {
-            var curPlateName = GlobalVars.Instance.PlatesInfo.CurrentPlateName;
-            var curStage = GlobalVars.Instance.PlatesInfo.CurrentPlateData.Stage;
-            if (curStage == AcquiredStage.SampleVal)
-            {
-                string workingFolder = GlobalVars.Instance.TempFolder;
-                string sFileName = workingFolder + curPlateName;
-                SharedFolder sharedFolder = new SharedFolder();
-                sharedFolder.SaveACopyfileToServer(sFileName);
-            }
-        }
+        //private void Save2Remote()
+        //{
+        //    var curPlateName = GlobalVars.Instance.PlatesInfo.CurrentPlateName;
+        //    var curStage = GlobalVars.Instance.PlatesInfo.CurrentPlateData.Stage;
+        //    if (curStage == AcquiredStage.SampleVal)
+        //    {
+        //        string workingFolder = GlobalVars.Instance.TempFolder;
+        //        string sFileName = workingFolder + curPlateName;
+        //        SharedFolder sharedFolder = new SharedFolder();
+        //        sharedFolder.SaveACopyfileToServer(sFileName);
+        //    }
+        //}
 
    
         private void lstboxPlates_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -268,10 +283,6 @@ namespace ReadResult
           
         }
     }
-
-
-
-    
 
     public static class ExtensionMethods
     {

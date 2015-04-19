@@ -20,6 +20,7 @@ namespace ReadResult
     /// </summary>
     public partial class QueryLabel : Window
     {
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public QueryLabel()
         {
             InitializeComponent();
@@ -29,29 +30,29 @@ namespace ReadResult
 
         void QueryLabel_Loaded(object sender, RoutedEventArgs e)
         {
+            log.Info("enum files");
             txtPath.Focus();
-            var files = Directory.EnumerateFiles(GlobalVars.Instance.TempFolder, "*.xls");
-            lstPlateNames.ItemsSource = files;
+            lstPlateNames.ItemsSource = GlobalVars.Instance.Files;
         }
 
-        public string PlateName { get; set; }
+        public string PlateFilePath { get; set; }
 
         private void btnConfirm_Click(object sender, RoutedEventArgs e)
         {
+            log.Info("confirm");
             string s = txtPath.Text;
-            string wholePath = GlobalVars.Instance.TempFolder + "\\" + s + ".xls";
           
             if(lstPlateNames.SelectedItem == null)
             {
-                SetInfo(string.Format("请选择需要读数的板子！",wholePath));
+                SetInfo("请选择需要读数的板子！");
                 return;
             }
-            wholePath = lstPlateNames.SelectedItem.ToString();
+            string wholePath = lstPlateNames.SelectedItem.ToString();
             FileInfo fileInfo = new FileInfo(wholePath);
-            PlateName = fileInfo.Name;
-            if (GlobalVars.Instance.PlatesInfo.PlateNames.Contains(PlateName))
+            PlateFilePath = wholePath;
+            if (GlobalVars.Instance.PlatesInfo.PlateNames.Contains(fileInfo.Name))
             {
-                SetInfo(string.Format("板子:{0}已经存在，请重新选择！", PlateName));
+                SetInfo(string.Format("板子:{0}已经存在，请重新选择！", PlateFilePath));
                 return;
             }
             this.DialogResult = true;
@@ -71,7 +72,7 @@ namespace ReadResult
 
         private void UpdateValidLabels(string plateName)
         {
-            var files = Directory.EnumerateFiles(GlobalVars.Instance.TempFolder, "*.xls");
+            var files = GlobalVars.Instance.Files;
             List<string> names = files.Where(x => IsValid(x,plateName)).ToList();
             lstPlateNames.ItemsSource = names;
             if (names.Count > 0)
@@ -81,7 +82,7 @@ namespace ReadResult
         private bool IsValid(string x,string prefix)
         {
             FileInfo fileInfo = new FileInfo(x);
-            return fileInfo.Name.StartsWith(prefix);
+            return fileInfo.Name.Contains(prefix);
         }
     }
 }

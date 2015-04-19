@@ -11,7 +11,7 @@ namespace ReadResult
     {
         public static void BackupFiles()
         {
-            string folder = GlobalVars.Instance.TempFolder;
+            string folder = GlobalVars.Instance.WorkingFolder;
             string dstFolder = folder + "backup\\";
             if (!Directory.Exists(dstFolder))
                 Directory.CreateDirectory(dstFolder);
@@ -19,11 +19,7 @@ namespace ReadResult
             var files = Directory.EnumerateFiles(folder, "*.xml");
             foreach(string sFile in files)
             {
-                FileInfo fileInfo = new FileInfo(sFile);
-                string dstFullPath = dstFolder + fileInfo.Name;
-                if (File.Exists(dstFullPath))
-                    File.Delete(dstFullPath);
-                File.Move(sFile, dstFullPath);
+                File.Delete(sFile);
             }
         }
     }

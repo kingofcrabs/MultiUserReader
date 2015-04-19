@@ -17,8 +17,8 @@ namespace ReadResult
         string sFolder;
         public delegate void Created(string file);
         public event Created onCreated;
-        private Timer timerFileSize = new Timer(1000);
-
+        private Timer timerFileSize = null;
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public FileWatcher(string folder)
         {
             sFolder = folder;
@@ -26,16 +26,14 @@ namespace ReadResult
 
         public void Start()
         {
+            timerFileSize = new Timer(1000);
             timerFileSize.Elapsed += timerFileSize_Elapsed;
             timerFileSize.Start();
-            
         }
 
       
         private bool AcquisitionWindowVisible()
         {
-            
-
             AutomationElement acquisitionWindow = AutomationElement.RootElement.FindFirst(TreeScope.Children,
                 new PropertyCondition(AutomationElement.NameProperty, "Measurement in progress"));
 
@@ -47,13 +45,21 @@ namespace ReadResult
             bool isAcquiring = AcquisitionWindowVisible();
             if (isAcquiring)
                 return;
+            Trace.WriteLine("acquire finished!");
+            IEnumerable<string> files = Directory.EnumerateFiles(sFolder, "*.xml");
+            string firstFile = "";
+            if (files.Count() > 0)
+            {
+                firstFile = files.First();
+            }
 
             timerFileSize.Stop();
+            timerFileSize.Elapsed -= timerFileSize_Elapsed;
+            log.Info("stopped");
+           
             if (onCreated != null)
             {
-                IEnumerable<string> files = Directory.EnumerateFiles(sFolder, "*.xml");
-                if(files.Count() >0)
-                    onCreated(files.First());
+                onCreated(firstFile);
             }
          
         }

@@ -38,13 +38,16 @@
     <ApplicationIcon>assist.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="log4net">
+      <HintPath>..\..\..\..\Pooling\lib\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="ManagedWinapi">
-      <HintPath>C:\Users\i311797\Documents\Visual Studio 2013\Projects\ReaderAssit\ReaderAssit\lib\ManagedWinapi.dll</HintPath>
+      <HintPath>3rd\ManagedWinapi.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Office.Interop.Excel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <EmbedInteropTypes>True</EmbedInteropTypes>
-      <HintPath>C:\Windows\assembly\GAC_MSIL\Microsoft.Office.Interop.Excel\15.0.0.0__71e9bce111e9429c\Microsoft.Office.Interop.Excel.dll</HintPath>
+      <HintPath>C:\microsoft.office.interop.excel.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
@@ -164,6 +167,11 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="assist.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="log4net.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -11,6 +12,7 @@ namespace ReadResult
 {
     public class GlobalVars
     {
+      
         private static GlobalVars vars = null;
         public PlatesInfo PlatesInfo { get; set; }
         public static GlobalVars Instance
@@ -27,25 +29,35 @@ namespace ReadResult
             PlatesInfo = new PlatesInfo();
          }
 
-        public string TempFolder
-        {
-            get
-            {
-                return ConfigurationManager.AppSettings["tempFolder"];
-            }
-        }
+        //public string TempFolder
+        //{
+        //    get
+        //    {
+        //        return ConfigurationManager.AppSettings["tempFolder"];
+        //    }
+        //}
 
-        public string RemoteFolder
-        {
-            get
-            {
-                return ConfigurationManager.AppSettings["remoteFolder"];
-            }
-        }
+        //public string RemoteFolder
+        //{
+        //    get
+        //    {
+        //        return ConfigurationManager.AppSettings["remoteFolder"];
+        //    }
+        //}
 
         public System.Windows.Automation.AutomationElement StartButton { get; set; }
 
         public ManagedWinapi.Windows.SystemWindow IControlWindow { get; set; }
+
+        public string WorkingFolder 
+        { 
+            get
+            {
+                return ConfigurationManager.AppSettings["workingFolder"];
+            }
+        }
+
+        public List<string> Files { get; set; }
     }
 
    
@@ -53,6 +65,8 @@ namespace ReadResult
 
     public class PlatesInfo
     {
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+    
         Dictionary<string, PlateData> plateVals = new Dictionary<string, PlateData>();
         
         public string CurrentPlateName { get; set; }
@@ -69,8 +83,10 @@ namespace ReadResult
             if (plateVals.ContainsKey(sName))
                 return;
 #endif
-            plateVals.Add(sName, new PlateData());
-            CurrentPlateName = sName;
+            FileInfo fileInfo = new FileInfo(sName);
+            log.InfoFormat("plate name: {0}, plate folder:{1}",fileInfo.Name,sName);
+            plateVals.Add(fileInfo.Name, new PlateData(sName));
+            CurrentPlateName = fileInfo.Name;
         }
 
         public PlateData CurrentPlateData
@@ -114,9 +130,8 @@ namespace ReadResult
 
     public class PlateData
     {
-
         private AcquiredStage stage;
-
+        public string FilePath { get; set; }
         public AcquiredStage Stage
         { 
             get
@@ -196,8 +211,9 @@ namespace ReadResult
             }
         }
 
-        public PlateData()
+        public PlateData(string sFilePath)
         {
+            FilePath = sFilePath;
             Stage = AcquiredStage.Nothing;
             for(int i = 0; i< 96; i++)
             {

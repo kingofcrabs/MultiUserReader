@@ -115,7 +115,7 @@ namespace ReadResult
           
             int yStartVol = (int)(ptStart.Y + height * 0.6);
             var txtVol = new FormattedText(
-            string.Format("{0}", vol2Show),
+            string.Format("{0:F}", vol2Show),
             System.Globalization.CultureInfo.CurrentCulture,
             FlowDirection.LeftToRight,
             new Typeface("Courier new"),
