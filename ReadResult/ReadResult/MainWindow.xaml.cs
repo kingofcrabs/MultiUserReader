@@ -108,10 +108,9 @@ namespace ReadResult
             log.Info("start acquisition");
             if (lstboxPlates.SelectedItem == null)
             {
-                Trace.WriteLine("Please select a plate first!");
+                log.Info("Please select a plate first!");
                 return;
             }
-
 
             if (GlobalVars.Instance.StartButton == null)
             {
@@ -136,7 +135,7 @@ namespace ReadResult
                 {
                     string sInfoFile = @"c:\windowsInfo.txt";
                     File.WriteAllLines(sInfoFile, windowInfos);
-                    Trace.WriteLine(string.Format("Cannot find icontrol! Windows information has been written to:{0}", sInfoFile));
+                    log.Error(string.Format("Cannot find icontrol! Windows information has been written to:{0}", sInfoFile));
                     return;
                 }
 
@@ -150,19 +149,19 @@ namespace ReadResult
             bool bEnable = (bool)GlobalVars.Instance.StartButton.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty);
             if(!bEnable)
             {
-                Trace.WriteLine("Cannot start acquisition, icontrol is not ready!");
+                log.Info("Cannot start acquisition, icontrol is not ready!");
                 return;
             }
-            Trace.WriteLine("Acquisition started.");
+            log.Info("Acquisition started.");
             try
             {
                 Utility.BackupFiles();
             }
             catch(Exception ex)
             {
-                Trace.WriteLine("backup failed:" + ex.Message);
+                log.Error("backup failed:" + ex.Message);
             }
-            Trace.WriteLine("backup files");
+            log.Info("backup files");
             fileWatcher = new FileWatcher(GlobalVars.Instance.WorkingFolder);
             fileWatcher.onCreated += fileWatcher_onCreated;
            
@@ -180,55 +179,26 @@ namespace ReadResult
             if (!(bool)res)
                 return;
             string s = queryForm.PlateFilePath;
-            Trace.WriteLine(string.Format("new plate: {0}", s));
+            log.Info(string.Format("new plate: {0}", s));
             FileInfo fileInfo = new FileInfo(s);
             plateNames.Add(fileInfo.Name);
             GlobalVars.Instance.PlatesInfo.AddPlate(s);
             lstboxPlates.SelectedIndex = plateNames.Count - 1;
         }
 
-
-        public XmlNode GetNode(XmlNodeList nodeList, string name)
-        {
-            foreach (XmlNode node in nodeList)
-            {
-                if (node.Name == name)
-                    return node;
-            }
-            throw new Exception("Cannot find");
-        }
-
-
-        private List<double> ReadFromFile(string sNewFile)
-        {
-            List<double> vals = new List<double>();
-            XmlDocument doc = new XmlDocument();
-            doc.Load(sNewFile);    //加载Xml文件  
-            XmlElement rootElem = doc.DocumentElement;   //获取根节点  
-            XmlNode sectionNode = GetNode(rootElem.ChildNodes, "Section");
-            XmlNode dataNode = GetNode(sectionNode.ChildNodes, "Data");
-            foreach (XmlNode node in dataNode.ChildNodes)
-            {
-                string sVal = node.InnerText;
-                vals.Add(double.Parse(sVal));
-            }
-            Trace.WriteLine(string.Format("Read {0} well values.", vals.Count));
-            return vals;
-        }
-    
-
         void fileWatcher_onCreated(string sNewFile)
         {
-            Trace.WriteLine(string.Format("found result file: {0}", sNewFile));
+            log.Info(string.Format("found result file: {0}", sNewFile));
             try
             {
-                var result = ReadFromFile(sNewFile);
+                var result = Utility.ReadFromFile(sNewFile);
+                log.InfoFormat("read {0} samples.", result.Count);
                 GlobalVars.Instance.PlatesInfo.CurrentPlateData.SetValues(result);
                 UpdateCurrentPlateInfo(GlobalVars.Instance.PlatesInfo.CurrentPlateName);
                 ExcelInterop.Write();
                 fileWatcher.onCreated -= fileWatcher_onCreated;
                 //Save2Remote();
-                Trace.WriteLine(string.Format("Result has been written to plate: {0}", GlobalVars.Instance.PlatesInfo.CurrentPlateName));
+                log.Info(string.Format("Result has been written to plate: {0}", GlobalVars.Instance.PlatesInfo.CurrentPlateName));
             }
             catch(Exception ex)
             {
@@ -263,7 +233,7 @@ namespace ReadResult
              string curPlateName = lstboxPlates.SelectedItem.ToString();
              if (!GlobalVars.Instance.PlatesInfo.PlateNames.Contains(curPlateName))
                  return;
-             Trace.WriteLine(string.Format("select plate: {0}", curPlateName));
+             log.Info(string.Format("select plate: {0}", curPlateName));
              UpdateCurrentPlateInfo(curPlateName, false);
         }
 

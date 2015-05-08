@@ -27,6 +27,7 @@ namespace ReadResult
         public GlobalVars()
         {
             PlatesInfo = new PlatesInfo();
+            Files = new List<string>();
          }
 
         //public string TempFolder

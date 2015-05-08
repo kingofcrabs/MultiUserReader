@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -21,18 +22,27 @@ namespace ReadResult
     public partial class QueryLabel : Window
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        ObservableCollection<string> interestFiles = new ObservableCollection<string>();
         public QueryLabel()
         {
             InitializeComponent();
             this.Loaded += QueryLabel_Loaded;
-            
         }
 
         void QueryLabel_Loaded(object sender, RoutedEventArgs e)
         {
             log.Info("enum files");
             txtPath.Focus();
-            lstPlateNames.ItemsSource = GlobalVars.Instance.Files;
+            interestFiles = new ObservableCollection<string>(GlobalVars.Instance.Files);
+            lstPlateNames.ItemsSource = interestFiles;
+        }
+
+        private void SetDummyFiles()
+        {
+            for(int i = 0; i< 20; i++)
+            {
+                GlobalVars.Instance.Files.Add(string.Format("just test{0}.csv", i + 1));
+            }
         }
 
         public string PlateFilePath { get; set; }
@@ -72,10 +82,8 @@ namespace ReadResult
 
         private void UpdateValidLabels(string plateName)
         {
-            var files = GlobalVars.Instance.Files;
-            List<string> names = files.Where(x => IsValid(x,plateName)).ToList();
-            lstPlateNames.ItemsSource = names;
-            if (names.Count > 0)
+            interestFiles = new ObservableCollection<string>(GlobalVars.Instance.Files.Where(x => IsValid(x, plateName)));
+            if (interestFiles.Count > 0)
                 lstPlateNames.SelectedIndex = 0;
         }
 
@@ -83,6 +91,29 @@ namespace ReadResult
         {
             FileInfo fileInfo = new FileInfo(x);
             return fileInfo.Name.Contains(prefix);
+        }
+
+        private void btnRemoveSelected_Click(object sender, RoutedEventArgs e)
+        {
+            log.Info("remove some items");
+            List<string> selectedFileNames = new List<string>();
+            foreach(string fileName in lstPlateNames.SelectedItems)
+            {
+                selectedFileNames.Add(fileName);
+            }
+            for(int i = 0; i< selectedFileNames.Count; i++)
+            {
+                interestFiles.Remove(selectedFileNames[i]);
+            }
+        }
+
+        private void btnRestore_Click(object sender, RoutedEventArgs e)
+        {
+            log.Info("restore items");
+            txtPath.Text = "";
+            interestFiles.Clear();
+            foreach (string sFile in GlobalVars.Instance.Files)
+                interestFiles.Add(sFile);
         }
     }
 }

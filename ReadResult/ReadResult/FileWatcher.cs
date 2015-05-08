@@ -45,7 +45,7 @@ namespace ReadResult
             bool isAcquiring = AcquisitionWindowVisible();
             if (isAcquiring)
                 return;
-            Trace.WriteLine("acquire finished!");
+            log.Info("acquire finished!");
             IEnumerable<string> files = Directory.EnumerateFiles(sFolder, "*.xml");
             string firstFile = "";
             if (files.Count() > 0)
