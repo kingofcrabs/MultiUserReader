@@ -48,11 +48,8 @@ namespace ReadResult
             {
                 Debug.WriteLine("未能打印！");
             }
-            
             workBook.Close();
             excel.Quit();
         }
-
-      
     }
 }

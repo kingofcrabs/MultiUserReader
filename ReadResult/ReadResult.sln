@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestShareFolder", "TestShar
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FolderBrowser", "FileBrowse\FolderBrowser.csproj", "{F1C654D6-87A9-4A3B-9AF3-377CD35C7B17}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZigZagTester", "ZigZagTester\ZigZagTester.csproj", "{3ABA85A9-4099-4A67-BEDC-7A7F0B36EC99}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{F1C654D6-87A9-4A3B-9AF3-377CD35C7B17}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F1C654D6-87A9-4A3B-9AF3-377CD35C7B17}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F1C654D6-87A9-4A3B-9AF3-377CD35C7B17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3ABA85A9-4099-4A67-BEDC-7A7F0B36EC99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3ABA85A9-4099-4A67-BEDC-7A7F0B36EC99}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3ABA85A9-4099-4A67-BEDC-7A7F0B36EC99}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3ABA85A9-4099-4A67-BEDC-7A7F0B36EC99}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

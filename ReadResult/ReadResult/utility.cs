@@ -49,8 +49,20 @@ namespace ReadResult
                 string sVal = node.InnerText;
                 vals.Add(double.Parse(sVal));
             }
-            //log.Info(string.Format("Read {0} well values.", vals.Count));
-            return vals;
+            List<double> resultVals = new List<double>();
+            bool isOdd = true;
+            while (vals.Count > 0)
+            {
+                var tmpVals = vals.Take(12);
+                vals = vals.Skip(12).ToList();
+                if (!isOdd)
+                {
+                    tmpVals = tmpVals.Reverse();
+                }
+                isOdd = !isOdd;
+                resultVals.AddRange(tmpVals);
+            }
+            return resultVals;
         }
     }
 }
