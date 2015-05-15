@@ -83,6 +83,7 @@ namespace ReadResult
         private void UpdateValidLabels(string plateName)
         {
             interestFiles = new ObservableCollection<string>(GlobalVars.Instance.Files.Where(x => IsValid(x, plateName)));
+            lstPlateNames.ItemsSource = interestFiles;
             if (interestFiles.Count > 0)
                 lstPlateNames.SelectedIndex = 0;
         }
