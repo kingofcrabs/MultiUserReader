@@ -30,7 +30,7 @@ namespace ReadResult
         [DllImport("user32.dll")]
         static extern bool ShowWindow(int hWnd, int nCmdShow);
 
-    
+        bool bDeleting = false;
         public MainWindow()
         {
             InitializeComponent();
@@ -92,9 +92,39 @@ namespace ReadResult
                 case Key.F1:
                     OnHelp();
                     break;
+                case Key.Delete:
+                    OnDelete();
+                    break;
                 default:
                     break;
             }
+        }
+
+        private void OnDelete()
+        {
+            if(lstboxPlates.SelectedItems.Count == 0)
+            {
+                log.Info("未选中任何板子！");
+                return;
+            }
+
+            if(MessageBox.Show("确定要删除选中板子？","警告",MessageBoxButton.YesNo) == MessageBoxResult.No)
+            {
+                log.Info("放弃删除操作！");
+                return;
+            }
+
+            List<string> remainPlateNames = new List<string>(plateNames);
+            for(int i = 0; i< lstboxPlates.SelectedItems.Count; i++)
+            {
+                string plateName = (string)lstboxPlates.SelectedItems[i];
+                remainPlateNames.Remove(plateName);
+            }
+            plateNames = new ObservableCollection<string>(remainPlateNames);
+            lstboxPlates.ItemsSource = plateNames;
+            
+            if(plateNames.Count > 0)
+                lstboxPlates.SelectedIndex = 0;
         }
 
         private void OnHelp()
@@ -256,16 +286,11 @@ namespace ReadResult
 
     public static class ExtensionMethods
     {
-
         private static Action EmptyDelegate = delegate() { };
-
-
 
         public static void Refresh(this UIElement uiElement)
         {
-
             uiElement.Dispatcher.Invoke(DispatcherPriority.Render, EmptyDelegate);
-
         }
 
     }

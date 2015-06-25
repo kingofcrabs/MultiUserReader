@@ -9,8 +9,7 @@
         <Label Content="提示" HorizontalAlignment="Left" Margin="0,371,0,0" VerticalAlignment="Top"/>
         <TextBox IsReadOnly="True" HorizontalAlignment="Left" Height="145" Name="txtHint" Margin="10,401,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="786"/>
         <ListBox HorizontalAlignment="Left" SelectionMode="Extended" Name="lstPlateNames"  Margin="10,39,0,250" Width="786"/>
-        <Button Name="btnRemoveSelected" Click="btnRemoveSelected_Click" Content="去除选中" HorizontalAlignment="Left" Margin="721,10,0,0" VerticalAlignment="Top" Width="75"/>
-        <Button Name="btnRestore" Click="btnRestore_Click" Content="恢复默认" HorizontalAlignment="Left" Margin="641,10,0,0" VerticalAlignment="Top" Width="75"/>
+        <Button Name="btnOpenFolder" Click="btnOpenFolder_Click" Content="打开所在文件夹" HorizontalAlignment="Left" Margin="702,10,0,0" VerticalAlignment="Top" Width="94"/>
 
     </Grid>
 </Window>

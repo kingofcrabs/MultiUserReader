@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -94,27 +95,16 @@ namespace ReadResult
             return fileInfo.Name.Contains(prefix);
         }
 
-        private void btnRemoveSelected_Click(object sender, RoutedEventArgs e)
+      
+        private void btnOpenFolder_Click(object sender, RoutedEventArgs e)
         {
-            log.Info("remove some items");
-            List<string> selectedFileNames = new List<string>();
-            foreach(string fileName in lstPlateNames.SelectedItems)
+            if(lstPlateNames.SelectedItem == null)
             {
-                selectedFileNames.Add(fileName);
+                SetInfo("请选择板子！");
+                return;
             }
-            for(int i = 0; i< selectedFileNames.Count; i++)
-            {
-                interestFiles.Remove(selectedFileNames[i]);
-            }
-        }
-
-        private void btnRestore_Click(object sender, RoutedEventArgs e)
-        {
-            log.Info("restore items");
-            txtPath.Text = "";
-            interestFiles.Clear();
-            foreach (string sFile in GlobalVars.Instance.Files)
-                interestFiles.Add(sFile);
+            FileInfo fileInfo = new FileInfo((string)lstPlateNames.SelectedItem);
+            Process.Start("explorer.exe", fileInfo.Directory.FullName);
         }
     }
 }

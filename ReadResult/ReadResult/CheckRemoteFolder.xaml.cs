@@ -1,5 +1,4 @@
-﻿using ReadResult.Properties;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
@@ -29,7 +28,7 @@ namespace ReadResult
             IsValidFolder = false;
             InitializeComponent();
             this.Loaded += CheckRemoteFolder_Loaded;
-            lblVersion.Content = strings.version;
+            btnConfirm.IsEnabled = false;
             txtHint.Text = "请确保工作目录中有定义文件！\r\n";
         }
         void EnumFiles()
@@ -69,6 +68,7 @@ namespace ReadResult
                new Action(delegate()
                    {
                        lstPlates.ItemsSource = GlobalVars.Instance.Files;
+                       btnConfirm.IsEnabled = true;
                    }));
             
         }
