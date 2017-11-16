@@ -34,8 +34,11 @@ namespace ReadResult
         void EnumFiles()
         {
             string root = GlobalVars.Instance.WorkingFolder;
+            Print("working folder:", new List<string>(){root});
+                
             var dirs = Directory.EnumerateDirectories(root);
             dirs = dirs.Where(x => IsValidGroup(x));
+            Print("valid groupds:", dirs);
             IEnumerable<string> validYears = GetValidYears(dirs);
             Print("valid years", validYears);
 
@@ -63,7 +66,12 @@ namespace ReadResult
             }
             allFiles = allFiles.Where(x => IsOD(x)).ToList();
             Print("allFiles", allFiles);
+            //List<string> fileNames = GetFileName(allFiles);
             GlobalVars.Instance.Files = allFiles;
+            string sAllFilesSavePath = FolderHelper.GetExeParentFolder() + "\\files.txt";
+            Print(string.Format("all files save to: {0}",sAllFilesSavePath), new List<string> { sAllFilesSavePath });
+            File.WriteAllLines(sAllFilesSavePath, allFiles);
+
             this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal,
                new Action(delegate()
                    {
@@ -72,6 +80,18 @@ namespace ReadResult
                    }));
             
         }
+
+        private List<string> GetFileName(List<string> fullNames)
+        {
+            List<string> strs = new List<string>();
+            foreach(string s in fullNames)
+            {
+                FileInfo fileInfo = new FileInfo(s);
+                strs.Add(fileInfo.Name);
+            }
+            return strs;
+        }
+
         void CheckRemoteFolder_Loaded(object sender, RoutedEventArgs e)
         {
             log.Info("begin load!");

@@ -47,6 +47,8 @@ namespace ReadResult
         //}
 
         public System.Windows.Automation.AutomationElement StartButton { get; set; }
+        public System.Windows.Automation.AutomationElement MoveOutButton { get; set; }
+        public System.Windows.Automation.AutomationElement MoveInButton { get; set; }
 
         public ManagedWinapi.Windows.SystemWindow IControlWindow { get; set; }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -9,6 +10,16 @@ using System.Xml.Serialization;
 
 namespace ReadResult
 {
+    public static class FolderHelper
+    {
+
+        static public string GetExeParentFolder()
+        {
+            string s = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            int index = s.LastIndexOf("\\");
+            return s.Substring(0, index) + "\\";
+        }
+    }
     public static class SerializeHelper
     {
         /// <summary>

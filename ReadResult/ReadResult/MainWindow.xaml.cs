@@ -12,6 +12,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
 using System.Xml;
+using System.Linq;
 
 namespace ReadResult
 {
@@ -29,11 +30,10 @@ namespace ReadResult
      
         [DllImport("user32.dll")]
         static extern bool ShowWindow(int hWnd, int nCmdShow);
-
-        bool bDeleting = false;
         public MainWindow()
         {
             InitializeComponent();
+
             CheckRemoteFolder selectFolderForm = new CheckRemoteFolder();
             selectFolderForm.ShowDialog();
             if (!selectFolderForm.IsValidFolder)
@@ -41,6 +41,7 @@ namespace ReadResult
                 this.Close();
                 return;
             }
+            NotifierReady();
             lstboxPlates.ItemsSource = plateNames;
             this.Loaded += MainWindow_Loaded;
             this.Closing += MainWindow_Closing;
@@ -50,8 +51,24 @@ namespace ReadResult
         void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             Trace.Listeners.Clear();
+            Pipeserver.Close();
         }
 
+
+        private void NotifierReady()
+        {
+            System.Diagnostics.Process[] feedMes = System.Diagnostics.Process.GetProcessesByName("FeedMe");
+            System.Diagnostics.Process[] feedMeReadPlates = System.Diagnostics.Process.GetProcessesByName("FeedMeReadPlate");
+            
+            foreach (System.Diagnostics.Process p in feedMes)
+            {
+                p.Kill();
+            }
+            foreach (System.Diagnostics.Process p in feedMeReadPlates)
+            {
+                p.Kill();
+            }
+        }
 
         private void AddTracer()
         {
@@ -63,6 +80,17 @@ namespace ReadResult
         #endregion
 
 
+        void CreateNamedPipeServer()
+        {
+            Pipeserver.owner = this;
+            Pipeserver.ownerInvoker = new Invoker(this);
+            ThreadStart pipeThread = new ThreadStart(Pipeserver.createPipeServer);
+            Thread listenerThread = new Thread(pipeThread);
+            listenerThread.SetApartmentState(ApartmentState.STA);
+            listenerThread.IsBackground = true;
+            listenerThread.Start();
+        }
+
      
 
        
@@ -70,11 +98,52 @@ namespace ReadResult
         void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             log.Info("main form loaded");
-            AddTracer();
-            lstboxPlates.SelectedIndex = 0;
-            this.KeyDown += MainWindow_KeyDown;
-            plateRender = new PlateRender(this);
-            myCanvas.Children.Add(plateRender);
+            try
+            {
+                log.Info("add tracer");
+                AddTracer();
+                lstboxPlates.SelectedIndex = 0;
+                this.KeyDown += MainWindow_KeyDown;
+                plateRender = new PlateRender(this);
+                log.Info("plate render");
+                myCanvas.Children.Add(plateRender);
+                CreateNamedPipeServer();
+            }
+            catch(Exception ex)
+            {
+                log.Error(ex.Message);
+            }
+        }
+
+        internal void ExecuteCommand(string sCommand)
+        {
+            switch(sCommand)
+            {
+                case  "G":
+                    OnStartAcq();
+                    break;
+                case "O":
+                    OnMoveOutOrIn(true);
+                    break;
+                case "I":
+                    OnMoveOutOrIn(false);
+                    break;
+                case "C":
+                    Application.Current.Shutdown();
+                    break;
+                default:
+                    int cmdID = int.Parse(sCommand);
+                    string selFile = FolderHelper.GetExeParentFolder() + "selected.txt";
+                    if (!File.Exists(selFile))
+                        log.Error("Cannot find selected file!");
+                    List<string> commands = File.ReadAllLines(selFile).ToList();
+                    if (commands.Count < cmdID)
+                        log.ErrorFormat("Only {0} plate names in selected.txt", commands.Count);
+
+
+                    OnNewPlate(commands[cmdID-1]);
+                    break;
+            }
         }
 
         void MainWindow_KeyDown(object sender, KeyEventArgs e)
@@ -88,6 +157,12 @@ namespace ReadResult
                 case Key.N:
                     if( Keyboard.Modifiers == ModifierKeys.Control)
                         OnNewPlate();
+                    break;
+                case Key.O:
+                    OnMoveOutOrIn(true);
+                    break;
+                case Key.I:
+                    OnMoveOutOrIn(false);
                     break;
                 case Key.F1:
                     OnHelp();
@@ -131,6 +206,56 @@ namespace ReadResult
         {
             Help helpForm = new Help();
             helpForm.ShowDialog();
+        }
+
+        private void OnMoveOutOrIn(bool isOut)
+        {
+            log.Info("move in or move out");
+            AutomationElement moveOutOrInButton = isOut ? GlobalVars.Instance.MoveOutButton : GlobalVars.Instance.MoveInButton;
+            if (moveOutOrInButton == null)
+            {
+                 List<string> windowInfos = new List<string>();
+                 SystemWindow[] windows = SystemWindow.AllToplevelWindows;
+                 SystemWindow icontrolWindow = null;
+                 for (int i = 0; i < windows.Length; i++)
+                 {
+                     string sTitle = windows[i].Title;
+                     if (sTitle != "")
+                         windowInfos.Add(sTitle);
+                     sTitle = sTitle.ToLower();
+                     if (sTitle.Contains("tecan") && sTitle.Contains("control"))
+                     {
+                         icontrolWindow = windows[i];
+                         GlobalVars.Instance.IControlWindow = icontrolWindow;
+                         break;
+                     }
+                 }
+
+                 if (icontrolWindow == null)
+                 {
+                     string sInfoFile = @"c:\windowsInfo.txt";
+                     File.WriteAllLines(sInfoFile, windowInfos);
+                     log.Error(string.Format("Cannot find icontrol! Windows information has been written to:{0}", sInfoFile));
+                     return;
+                 }
+
+                 AutomationElement iControl = AutomationElement.FromHandle(icontrolWindow.HWnd);
+                 // Sample usage
+                 ShowWindow(iControl.Current.NativeWindowHandle, SW_SHOWMAXIMIZED);
+                 Thread.Sleep(200);
+                 string s = isOut ? "Move Plate Out" : "Move Plate In";
+                 AutomationElement btn = iControl.FindFirst(TreeScope.Descendants, 
+                     new PropertyCondition(AutomationElement.NameProperty, s));
+                 moveOutOrInButton = btn;
+             }
+            bool bEnable = (bool)moveOutOrInButton.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty);
+            if (!bEnable)
+            {
+                log.Info("Cannot move in or move out, icontrol is not ready!");
+                return;
+            }
+            var click = moveOutOrInButton.GetCurrentPattern(InvokePattern.Pattern) as InvokePattern;
+            click.Invoke();
         }
 
         private void OnStartAcq()
@@ -201,6 +326,28 @@ namespace ReadResult
             fileWatcher.Start();
         }
 
+
+        private void OnNewPlate(string sWholePath)
+        {
+            if(!GlobalVars.Instance.Files.Contains(sWholePath))
+            {
+                log.InfoFormat("File: {0} doesn't exist!", sWholePath);
+            }
+            log.Info(string.Format("new plate: {0}", sWholePath));
+
+            FileInfo fileInfo = new FileInfo(sWholePath);
+            if (plateNames.Contains(fileInfo.Name))//second round
+            {
+                int index = plateNames.IndexOf(fileInfo.Name);
+                lstboxPlates.SelectedIndex = index;
+                return;
+            }
+
+            plateNames.Add(fileInfo.Name);
+            GlobalVars.Instance.PlatesInfo.AddPlate(sWholePath);
+            lstboxPlates.SelectedIndex = plateNames.Count - 1;
+        }
+
         private void OnNewPlate()
         {
             log.Info("new plate");
@@ -234,6 +381,7 @@ namespace ReadResult
             {
                 Trace.Write("Error happend: " + ex.Message);
             }
+            NotifierReady();
             //plateRender.Refresh();
         }
 
@@ -280,8 +428,9 @@ namespace ReadResult
                       this.Height = this.Height - 1;
                       }
                   ));
-          
         }
+
+       
     }
 
     public static class ExtensionMethods
@@ -290,7 +439,7 @@ namespace ReadResult
 
         public static void Refresh(this UIElement uiElement)
         {
-            uiElement.Dispatcher.Invoke(DispatcherPriority.Render, EmptyDelegate);
+            uiElement.Dispatcher.Invoke(DispatcherPriority.ContextIdle, EmptyDelegate);
         }
 
     }
