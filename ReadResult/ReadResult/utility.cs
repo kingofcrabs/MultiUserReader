@@ -17,7 +17,7 @@ namespace ReadResult
             if (!Directory.Exists(dstFolder))
                 Directory.CreateDirectory(dstFolder);
             
-            var files = Directory.EnumerateFiles(folder, "*.xml");
+            var files = Directory.EnumerateFiles(folder, "*.asc");
             foreach(string sFile in files)
             {
                 File.Delete(sFile);
@@ -38,31 +38,24 @@ namespace ReadResult
 
         public static List<double> ReadFromFile(string sNewFile)
         {
-            List<double> vals = new List<double>();
-            XmlDocument doc = new XmlDocument();
-            doc.Load(sNewFile);    //加载Xml文件  
-            XmlElement rootElem = doc.DocumentElement;   //获取根节点  
-            XmlNode sectionNode = GetNode(rootElem.ChildNodes, "Section");
-            XmlNode dataNode = GetNode(sectionNode.ChildNodes, "Data");
-            foreach (XmlNode node in dataNode.ChildNodes)
+            List<string> content = File.ReadAllLines(sNewFile).ToList();
+            Dictionary<int, double> wellID_Vals = new Dictionary<int,double>();
+            content = content.Skip(1).ToList();
+            for(int y = 0; y < content.Count; y++)
             {
-                string sVal = node.InnerText;
-                vals.Add(double.Parse(sVal));
-            }
-            List<double> resultVals = new List<double>();
-            bool isOdd = true;
-            while (vals.Count > 0)
-            {
-                var tmpVals = vals.Take(12);
-                vals = vals.Skip(12).ToList();
-                if (!isOdd)
+                List<string> subStrs = content[y].Split('\t').ToList();
+                subStrs = subStrs.Skip(1).ToList();
+                for(int x = 0 ; x< subStrs.Count-1; x++)
                 {
-                    tmpVals = tmpVals.Reverse();
+                    int ID = x * 8 + y + 1;
+                    wellID_Vals.Add(ID, double.Parse(subStrs[x]));
                 }
-                isOdd = !isOdd;
-                resultVals.AddRange(tmpVals);
             }
-            return resultVals;
+            List<double> results = new List<double>();
+            int maxID = wellID_Vals.Max(pair => pair.Key);
+            for (int id = 1; id <= maxID; id++)
+                results.Add(wellID_Vals[id]);
+            return results;
         }
     }
 }

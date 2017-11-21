@@ -61,6 +61,14 @@ namespace ReadResult
         }
 
         public List<string> Files { get; set; }
+
+        public string ResultFolder
+        {
+            get
+            {
+                return ConfigurationManager.AppSettings["resultFolder"];
+            }
+        }
     }
 
    

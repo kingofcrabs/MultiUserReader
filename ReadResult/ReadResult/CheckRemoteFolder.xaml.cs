@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ReadResult.Properties;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
@@ -30,54 +31,63 @@ namespace ReadResult
             this.Loaded += CheckRemoteFolder_Loaded;
             btnConfirm.IsEnabled = false;
             txtHint.Text = "请确保工作目录中有定义文件！\r\n";
+            lblVersion.Content = strings.version;
         }
         void EnumFiles()
         {
-            string root = GlobalVars.Instance.WorkingFolder;
-            Print("working folder:", new List<string>(){root});
-                
-            var dirs = Directory.EnumerateDirectories(root);
-            dirs = dirs.Where(x => IsValidGroup(x));
-            Print("valid groupds:", dirs);
-            IEnumerable<string> validYears = GetValidYears(dirs);
-            Print("valid years", validYears);
-
-            IEnumerable<string> validMonths = GetValidMonths(validYears);
-            Print("valid months", validMonths);
-
-            List<string> allMonthsSub = new List<string>();
-            foreach (string s in validMonths)
+            try
             {
-                allMonthsSub.AddRange(Directory.EnumerateDirectories(s));
-            }
-            Print("valid months sub", allMonthsSub);
 
-            List<string> latestFolders = new List<string>();
-            foreach (string s in allMonthsSub)
-            {
-                latestFolders.AddRange(GetLatestThree(s));
-            }
-            Print("latest folders", latestFolders);
+                string root = GlobalVars.Instance.WorkingFolder;
+                Print("working folder:", new List<string>() { root });
 
-            List<string> allFiles = new List<string>();
-            foreach (string s in latestFolders)
-            {
-                allFiles.AddRange(Directory.EnumerateFiles(s, "*.xls"));
-            }
-            allFiles = allFiles.Where(x => IsOD(x)).ToList();
-            Print("allFiles", allFiles);
-            //List<string> fileNames = GetFileName(allFiles);
-            GlobalVars.Instance.Files = allFiles;
-            string sAllFilesSavePath = FolderHelper.GetExeParentFolder() + "\\files.txt";
-            Print(string.Format("all files save to: {0}",sAllFilesSavePath), new List<string> { sAllFilesSavePath });
-            File.WriteAllLines(sAllFilesSavePath, allFiles);
+                var dirs = Directory.EnumerateDirectories(root);
+                dirs = dirs.Where(x => IsValidGroup(x));
+                Print("valid groupds:", dirs);
+                IEnumerable<string> validYears = GetValidYears(dirs);
+                Print("valid years", validYears);
 
-            this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal,
-               new Action(delegate()
+                IEnumerable<string> validMonths = GetValidMonths(validYears);
+                Print("valid months", validMonths);
+
+                List<string> allMonthsSub = new List<string>();
+                foreach (string s in validMonths)
+                {
+                    allMonthsSub.AddRange(Directory.EnumerateDirectories(s));
+                }
+                Print("valid months sub", allMonthsSub);
+
+                List<string> latestFolders = new List<string>();
+                foreach (string s in allMonthsSub)
+                {
+                    latestFolders.AddRange(GetLatestThree(s));
+                }
+                Print("latest folders", latestFolders);
+
+                List<string> allFiles = new List<string>();
+                foreach (string s in latestFolders)
+                {
+                    allFiles.AddRange(Directory.EnumerateFiles(s, "*.xls"));
+                }
+                allFiles = allFiles.Where(x => IsOD(x)).ToList();
+                Print("allFiles", allFiles);
+                //List<string> fileNames = GetFileName(allFiles);
+                GlobalVars.Instance.Files = allFiles;
+                string sAllFilesSavePath = FolderHelper.GetExeParentFolder() + "\\files.txt";
+                Print(string.Format("all files save to: {0}", sAllFilesSavePath), new List<string> { sAllFilesSavePath });
+                File.WriteAllLines(sAllFilesSavePath, allFiles);
+
+                this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal,
+                   new Action(delegate()
                    {
                        lstPlates.ItemsSource = GlobalVars.Instance.Files;
                        btnConfirm.IsEnabled = true;
                    }));
+            }
+            catch (Exception ex)
+            {
+                Print("Error happened", new List<string>() { ex.Message });
+            }
             
         }
 

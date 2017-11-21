@@ -267,63 +267,31 @@ namespace ReadResult
                 return;
             }
 
-            if (GlobalVars.Instance.StartButton == null)
+            
+            string folder = GlobalVars.Instance.ResultFolder;
+            var files = Directory.EnumerateFiles(folder, "*.asc");
+            if (files == null || files.Count() == 0)
             {
-                List<string> windowInfos = new List<string>();
-                SystemWindow[] windows = SystemWindow.AllToplevelWindows;
-                SystemWindow icontrolWindow = null;
-                for (int i = 0; i < windows.Length; i++)
-                {
-                    string sTitle = windows[i].Title;
-                    if (sTitle != "")
-                        windowInfos.Add(sTitle);
-                    sTitle = sTitle.ToLower();
-                    if (sTitle.Contains("tecan") && sTitle.Contains("control"))
-                    {
-                        icontrolWindow = windows[i];
-                        GlobalVars.Instance.IControlWindow = icontrolWindow;
-                        break;
-                    }
-                }
-
-                if (icontrolWindow == null)
-                {
-                    string sInfoFile = @"c:\windowsInfo.txt";
-                    File.WriteAllLines(sInfoFile, windowInfos);
-                    log.Error(string.Format("Cannot find icontrol! Windows information has been written to:{0}", sInfoFile));
-                    return;
-                }
-
-                AutomationElement iControl = AutomationElement.FromHandle(icontrolWindow.HWnd);
-                // Sample usage
-                ShowWindow(iControl.Current.NativeWindowHandle, SW_SHOWMAXIMIZED);
-                Thread.Sleep(200);
-                AutomationElement startBtn = iControl.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "Start"));
-                GlobalVars.Instance.StartButton = startBtn;
-            }
-            bool bEnable = (bool)GlobalVars.Instance.StartButton.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty);
-            if(!bEnable)
-            {
-                log.Info("Cannot start acquisition, icontrol is not ready!");
+                log.Error("Cannot read the result file.");
                 return;
             }
-            log.Info("Acquisition started.");
+            string sNewFile = files.OrderByDescending(x => x).First();
+            log.Info(string.Format("found result file: {0}", sNewFile));
             try
             {
+                var result = Utility.ReadFromFile(sNewFile);
+                log.InfoFormat("read {0} samples.", result.Count);
+                GlobalVars.Instance.PlatesInfo.CurrentPlateData.SetValues(result);
+                UpdateCurrentPlateInfo(GlobalVars.Instance.PlatesInfo.CurrentPlateName);
+                ExcelInterop.Write();
+                log.Info(string.Format("Result has been written to plate: {0}", GlobalVars.Instance.PlatesInfo.CurrentPlateName));
                 Utility.BackupFiles();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                log.Error("backup failed:" + ex.Message);
+                Trace.Write("Error happend: " + ex.Message);
             }
-            log.Info("backup files");
-            fileWatcher = new FileWatcher(GlobalVars.Instance.WorkingFolder);
-            fileWatcher.onCreated += fileWatcher_onCreated;
-           
-            var click = GlobalVars.Instance.StartButton.GetCurrentPattern(InvokePattern.Pattern) as InvokePattern;
-            click.Invoke();
-            Thread.Sleep(10000);
-            fileWatcher.Start();
+            NotifierReady();
         }
 
 
@@ -361,28 +329,6 @@ namespace ReadResult
             plateNames.Add(fileInfo.Name);
             GlobalVars.Instance.PlatesInfo.AddPlate(s);
             lstboxPlates.SelectedIndex = plateNames.Count - 1;
-        }
-
-        void fileWatcher_onCreated(string sNewFile)
-        {
-            log.Info(string.Format("found result file: {0}", sNewFile));
-            try
-            {
-                var result = Utility.ReadFromFile(sNewFile);
-                log.InfoFormat("read {0} samples.", result.Count);
-                GlobalVars.Instance.PlatesInfo.CurrentPlateData.SetValues(result);
-                UpdateCurrentPlateInfo(GlobalVars.Instance.PlatesInfo.CurrentPlateName);
-                ExcelInterop.Write();
-                fileWatcher.onCreated -= fileWatcher_onCreated;
-                //Save2Remote();
-                log.Info(string.Format("Result has been written to plate: {0}", GlobalVars.Instance.PlatesInfo.CurrentPlateName));
-            }
-            catch(Exception ex)
-            {
-                Trace.Write("Error happend: " + ex.Message);
-            }
-            NotifierReady();
-            //plateRender.Refresh();
         }
 
         //private void Save2Remote()
