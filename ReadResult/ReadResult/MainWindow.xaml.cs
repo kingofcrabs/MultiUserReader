@@ -13,6 +13,7 @@ using System.Windows.Interop;
 using System.Windows.Threading;
 using System.Xml;
 using System.Linq;
+using System.Configuration;
 
 namespace ReadResult
 {
@@ -258,8 +259,98 @@ namespace ReadResult
             click.Invoke();
         }
 
+        private void OnStartAcqStandAlone()
+        {
+            MainWindow.log.Info("start acquisition");
+            if (this.lstboxPlates.SelectedItem == null)
+            {
+                MainWindow.log.Info("Please select a plate first!");
+                return;
+            }
+            if (GlobalVars.Instance.StartButton == null)
+            {
+                List<string> list = new List<string>();
+                SystemWindow[] allToplevelWindows = SystemWindow.AllToplevelWindows;
+                SystemWindow systemWindow = null;
+                for (int i = 0; i < allToplevelWindows.Length; i++)
+                {
+                    string text = allToplevelWindows[i].Title;
+                    if (text != "")
+                    {
+                        list.Add(text);
+                    }
+                    text = text.ToLower();
+                    if (text.Contains("tecan") && text.Contains("control"))
+                    {
+                        systemWindow = allToplevelWindows[i];
+                        GlobalVars.Instance.IControlWindow = systemWindow;
+                        break;
+                    }
+                }
+                if (systemWindow == null)
+                {
+                    string text2 = "c:\\windowsInfo.txt";
+                    File.WriteAllLines(text2, list);
+                    MainWindow.log.Error(string.Format("Cannot find icontrol! Windows information has been written to:{0}", text2));
+                    return;
+                }
+                AutomationElement automationElement = AutomationElement.FromHandle(systemWindow.HWnd);
+                AutomationElement.AutomationElementInformation current = automationElement.Current;
+                MainWindow.ShowWindow(current.NativeWindowHandle, 3);
+                Thread.Sleep(200);
+                AutomationElement startButton = automationElement.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "Start"));
+                GlobalVars.Instance.StartButton = startButton;
+            }
+            if (!(bool)GlobalVars.Instance.StartButton.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty))
+            {
+                MainWindow.log.Info("Cannot start acquisition, icontrol is not ready!");
+                return;
+            }
+            MainWindow.log.Info("Acquisition started.");
+            try
+            {
+                Utility.BackupFiles();
+            }
+            catch (Exception ex)
+            {
+                MainWindow.log.Error("backup failed:" + ex.Message);
+            }
+            MainWindow.log.Info("backup files");
+            this.fileWatcher = new FileWatcher(GlobalVars.Instance.WorkingFolder);
+            this.fileWatcher.onCreated += new FileWatcher.Created(this.fileWatcher_onCreated);
+            InvokePattern invokePattern = GlobalVars.Instance.StartButton.GetCurrentPattern(InvokePattern.Pattern) as InvokePattern;
+            invokePattern.Invoke();
+            Thread.Sleep(10000);
+            this.fileWatcher.Start();
+        }
+
+        private void fileWatcher_onCreated(string sNewFile)
+        {
+            MainWindow.log.Info(string.Format("found result file: {0}", sNewFile));
+            try
+            {
+                List<double> list = Utility.ReadFromFile(sNewFile);
+                MainWindow.log.InfoFormat("read {0} samples.", list.Count);
+                GlobalVars.Instance.PlatesInfo.CurrentPlateData.SetValues(list);
+                this.UpdateCurrentPlateInfo(GlobalVars.Instance.PlatesInfo.CurrentPlateName, true);
+                ExcelInterop.Write();
+                this.fileWatcher.onCreated -= new FileWatcher.Created(this.fileWatcher_onCreated);
+                MainWindow.log.Info(string.Format("Result has been written to plate: {0}", GlobalVars.Instance.PlatesInfo.CurrentPlateName));
+            }
+            catch (Exception ex)
+            {
+                Trace.Write("Error happend: " + ex.Message);
+            }
+            this.NotifierReady();
+        }
         private void OnStartAcq()
         {
+            if(bool.Parse(ConfigurationManager.AppSettings["standalone"]))
+            {
+                OnStartAcqStandAlone();
+                return;
+            }
+
             log.Info("start acquisition");
             if (lstboxPlates.SelectedItem == null)
             {

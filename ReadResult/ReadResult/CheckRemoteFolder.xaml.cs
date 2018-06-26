@@ -42,18 +42,35 @@ namespace ReadResult
                 Print("working folder:", new List<string>() { root });
 
                 var dirs = Directory.EnumerateDirectories(root);
+              
                 dirs = dirs.Where(x => IsValidGroup(x));
-                Print("valid groupds:", dirs);
+                if(dirs.Count() == 0)
+                {
+                    throw new Exception("No valid groups!");
+                }
+                Print("valid groups:", dirs);
                 IEnumerable<string> validYears = GetValidYears(dirs);
+                if (validYears.Count() == 0)
+                {
+                    throw new Exception("No valid years!");
+                }
                 Print("valid years", validYears);
 
                 IEnumerable<string> validMonths = GetValidMonths(validYears);
+                if (validMonths.Count() == 0)
+                {
+                    throw new Exception("No valid months!");
+                }
                 Print("valid months", validMonths);
 
                 List<string> allMonthsSub = new List<string>();
                 foreach (string s in validMonths)
                 {
                     allMonthsSub.AddRange(Directory.EnumerateDirectories(s));
+                }
+                if (validMonths.Count() == 0)
+                {
+                    throw new Exception("No valid months sub!");
                 }
                 Print("valid months sub", allMonthsSub);
 

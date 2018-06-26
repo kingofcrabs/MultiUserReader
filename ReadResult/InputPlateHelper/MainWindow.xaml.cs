@@ -29,7 +29,7 @@ namespace InputPlateHelper
         {
             InitializeComponent();
             this.Loaded += MainWindow_Loaded;
-            
+
             this.KeyDown += MainWindow_KeyDown;
         }
 
@@ -66,6 +66,7 @@ namespace InputPlateHelper
         {
             string sFile = FolderHelper.GetExeParentFolder() + "files.txt";
             allPlateFiles = File.ReadLines(sFile).ToList();
+            allPlateFiles = allPlateFiles.Where(x => !x.Contains("Vol")).ToList();
             lstSelectedPlates.ItemsSource = selectedPlates;
             OnNewPlate();
         }

@@ -34,7 +34,8 @@ namespace ReadResult
         {
             log.Info("enum files");
             txtPath.Focus();
-            interestFiles = new ObservableCollection<string>(GlobalVars.Instance.Files);
+            var noVolFiles = GlobalVars.Instance.Files.Where(x => !x.Contains("Vol")).ToList();
+            interestFiles = new ObservableCollection<string>(noVolFiles);
             lstPlateNames.ItemsSource = interestFiles;
         }
 
